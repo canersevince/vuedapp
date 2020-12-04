@@ -1,47 +1,74 @@
 {
-  "name": "vue",
-  "version": "0.1.0",
-  "private": true,
+  "name": "nft-2",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "dev": "vue-cli-service serve --port $PORT",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "build": "npm run build:contract && npm run build:web",
+    "build:contract": "node contract/compile -v",
+    "build:contract:debug": "node contract/compile -v --debug",
+    "build:web": "node copy-dev-account.js && vue-cli-service build",
+    "dev:deploy:contract": "near dev-deploy",
+    "deploy:contract": "near deploy",
+    "deploy:pages": "gh-pages -d dist/",
+    "deploy": "npm run build && npm run deploy:contract && npm run deploy:pages",
+    "prestart": "npm run build:contract:debug && npm run dev:deploy:contract",
+    "start": "echo The app is starting! It will automatically open in your browser when ready && npm run serve",
+    "dev": "nodemon --watch contract --exec \"npm run start\"",
+    "test:web": "vue-cli-service test:unit",
+    "test": "npm run build:contract:debug && node contract/test && vue-cli-service test:unit",
+    "serve": "node copy-dev-account.js && vue-cli-service serve --open",
+    "lint": "eslint . --ext .js --ext .vue --fix"
   },
   "dependencies": {
-    "core-js": "^2.6.5",
-    "vue": "^2.6.10"
+    "big.js": "^6.0.2",
+    "core-js": "~3.6.5",
+    "crypto-js": "^4.0.0",
+    "near-api-js": "^0.34.0",
+    "vue": "~2.6.11",
+    "vue-router": "^3.4.9",
+    "vuex": "^3.6.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.9.0",
-    "@vue/cli-plugin-eslint": "^3.9.0",
-    "@vue/cli-service": "^3.9.0",
-    "babel-eslint": "^10.0.1",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.0.0",
-    "vue-template-compiler": "^2.6.10"
+    "@vue/cli-plugin-babel": "~4.5.8",
+    "@vue/cli-plugin-eslint": "~4.5.8",
+    "@vue/cli-plugin-unit-jest": "~4.5.4",
+    "@vue/cli-service": "~4.5.8",
+    "@vue/test-utils": "~1.1.1",
+    "env-cmd": "~10.1.0",
+    "eslint": "~7.12.1",
+    "eslint-plugin-vue": "~7.1.0",
+    "gh-pages": "~3.1.0",
+    "near-cli": "~1.2.0",
+    "node-sass": "^5.0.0",
+    "nodemon": "~2.0.4",
+    "sass-loader": "^10.1.0",
+    "shelljs": "~0.8.4",
+    "vue-template-compiler": "~2.6.11"
   },
   "eslintConfig": {
-    "root": true,
+    "ignorePatterns": [
+      "src/config.js",
+      "/tests/*.spec.js",
+      "copy-dev-account.js"
+    ],
     "env": {
-      "node": true
+      "browser": true,
+      "es2020": true
     },
     "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
+      "plugin:vue/essential"
     ],
-    "rules": {},
     "parserOptions": {
-      "parser": "babel-eslint"
-    }
-  },
-  "postcss": {
-    "plugins": {
-      "autoprefixer": {}
-    }
+      "ecmaVersion": 2017,
+      "sourceType": "module"
+    },
+    "plugins": [
+      "vue"
+    ]
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions"
+    "last 2 versions",
+    "not dead"
   ]
 }
