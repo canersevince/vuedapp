@@ -67,8 +67,16 @@ export default {
           console.log('Balance is empty.')
         }
       })
+
       window.contract.get_sales({account_id: "seadox3.testnet"}).then(response => {
-        this.sales = response
+        this.sales.push(...response)
+        console.log('get_tokens')
+        console.log(response)
+      }).catch(error => {
+        console.log(error)
+      })
+      window.contract.get_sales({account_id: "t.testnet"}).then(response => {
+        this.sales.push(...response)
         console.log('get_tokens')
         console.log(response)
       }).catch(error => {
