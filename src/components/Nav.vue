@@ -1,6 +1,6 @@
 <template>
   <!-- This example requires Tailwind CSS v2.0+ -->
-  <nav class="bg-gray-800" @click="toggle">
+  <nav class="nav-custom-red" @click="toggle">
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
       <div class="relative flex items-center justify-between h-16">
         <div data-toggle="navbar" class="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -38,7 +38,9 @@
         </div>
         <div class="flex-1 flex items-center justify-center sm:items-stretch sm:justify-start">
           <div class="flex-shrink-0 flex items-center">
-            <router-link tag="a" to="/" class="text-xl font-bold uppercase">Nearfolio</router-link>
+            <router-link :exact="true" tag="a" to="/" class="text-xl text-white font-bold uppercase">
+              <img :src="require('@/assets/nearfolio.svg')" alt="">
+            </router-link>
           </div>
           <div class="hidden sm:block sm:ml-6">
             <div class="flex space-x-4">
@@ -47,19 +49,37 @@
                   :key="nav_item.name"
                   v-for="nav_item in main_nav_items" tag="a"
                   :to="nav_item.to"
-                  exact-active-class="bg-gray-900"
+                  exact-active-class="bg-gray-900 text-white"
                   :exact="true"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                 {{ nav_item.name }}
               </router-link>
               <router-link
                   tag="a"
+                  :to="'/create'"
+                  exact-active-class="bg-gray-900 text-white"
+                  :exact="true"
+                  v-if="is_minter"
+                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                Admin
+              </router-link>
+              <router-link
+                  tag="a"
+                  :to="'/create/collection'"
+                  exact-active-class="bg-gray-900 text-white"
+                  :exact="true"
+                  v-if="is_minter"
+                  class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                Create Collection
+              </router-link>
+              <router-link
+                  tag="a"
                   :to="'/admin'"
-                  exact-active-class="bg-gray-900"
+                  exact-active-class="bg-gray-900 text-white"
                   :exact="true"
                   v-if="is_admin"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                Admin
+                Mint NFT
               </router-link>
             </div>
           </div>
@@ -105,7 +125,7 @@
             -->
             <div
                 :class="is_user_dropdown_active ? 'block':'sm:hidden hidden'"
-                class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
+                class="z-index-top origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5"
                 role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
               <UserInfoContainer :mobile="true" @click="toggleUser"></UserInfoContainer>
 
@@ -126,7 +146,7 @@
             <img class="mx-auto near-img" :src="require('@/assets/near.logo.svg')" alt="">
           </button>
           <button
-              v-if="ethereum"
+              v-if="ethereum && false"
               class="transition duration-300 hover:bg-gray-100
               flex mx-2 items-center justify-center button text-gray-300 bg-gray-300 text-indigo-900
               px-3 py-2 rounded-md text-sm font-medium">
@@ -208,6 +228,9 @@ export default {
     },
     threeBoxUser() {
       return this.$store.getters['get3Box']
+    },
+    is_minter() {
+      return this.$store.getters['getMinter']
     }
   },
   async beforeMount() {
@@ -219,13 +242,20 @@ export default {
       this.$store.commit('updateAdmin', true)
       this.is_admin = true
     }).catch(err => console.log(err))
+    window.contract.get_minter({accountId: accountId}).then(res => {
+      if (res) {
+        this.$store.commit('updateMinter')
+      }
+    }).catch(err => {
+
+    })
   }
 }
 </script>
 
 <style scoped lang="scss">
 .router-link-active {
-  color: #88cffc;
+  color: white !important;
 }
 
 .login-buttons {
@@ -244,5 +274,9 @@ export default {
 
 .near-img {
   transform: scale(1.5);
+}
+
+.z-index-top {
+  z-index: 99999;
 }
 </style>

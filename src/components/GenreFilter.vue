@@ -1,8 +1,9 @@
 <template>
   <div class="w-100">
     <div class="p-3">
-      <input v-model="filterWord" class="bg-white focus:outline-none focus:shadow-outline border
-      border-gray-300 rounded-lg py-2 px-4 block w-full appearance-none leading-normal"
+      <input v-model="filterWord"
+             class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+
              type="text" placeholder="Search...">
     </div>
     <ul class="list list-none">

@@ -49,13 +49,15 @@
     "sass-loader": "^10.1.0",
     "shelljs": "~0.8.4",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "vue-eslint-parser": "^7.2.0",
     "vue-template-compiler": "~2.6.11"
   },
   "eslintConfig": {
     "ignorePatterns": [
       "src/config.js",
       "/tests/*.spec.js",
-      "copy-dev-account.js"
+      "copy-dev-account.js",
+      "src/router.js"
     ],
     "env": {
       "browser": true,
@@ -66,7 +68,8 @@
     ],
     "parserOptions": {
       "ecmaVersion": 2017,
-      "sourceType": "module"
+      "sourceType": "module",
+      "allowImportExportEverywhere": true
     },
     "plugins": [
       "vue"

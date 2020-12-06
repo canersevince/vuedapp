@@ -4,23 +4,15 @@
     "to": "/recent"
   },
   {
-    "name": "Browse",
-    "to": "/browse"
+    "name": "Marketplace",
+    "to": "/browse/recent"
   },
   {
-    "name": "My Collection",
+    "name": "Collections",
+    "to": "/browse-collections"
+  },
+  {
+    "name": "Inventory",
     "to": "/my_collection"
-  },
-  {
-    "name": "News",
-    "to": "/news"
-  },
-  {
-    "name": "Mint Token",
-    "to": "/create"
-  },
-  {
-    "name": "Create Collection",
-    "to": "/create/collection"
   }
 ]

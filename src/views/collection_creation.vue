@@ -42,7 +42,7 @@
               Collection Image
             </label>
             <button @drop="onDrop" @click="selectImage"
-                    class="w-full px-3 py-2 mx-auto bg-indigo-500 radius-xl border text-white">
+                    class="w-full px-3 py-2 mx-auto custom-red radius-xl border text-white">
               <i class="fa fa-image"></i> Select Image
             </button>
           </div>
@@ -50,7 +50,7 @@
             only select image files</p>
         </div>
         <div class="w-full md:w-100 px-3 mb-6 md:mb-0 flex items-center justify-content-center mt-5">
-          <button @click="createCollection" class="px-3 py-2 mx-auto bg-indigo-500 radius-xl border text-white">
+          <button @click="createCollection" class="px-3 py-2 mx-auto custom-red radius-xl border text-white">
             Create Collection
           </button>
         </div>

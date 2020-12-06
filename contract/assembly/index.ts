@@ -5,7 +5,8 @@ import {
     PersistentMap,
     PersistentUnorderedMap,
     storage,
-    u128
+    u128,
+    PersistentVector
 } from "near-sdk-as";
 
 import {Collection, collections, Token, TokenId, tokens, Trait} from './model'
@@ -78,12 +79,19 @@ export const ERROR_TOKEN_NOT_OWNED_BY_CALLER = 'Token is not owned by the caller
 
 
 // init contract owner
-export function launch(): void {
+export function launch(owner: string): void {
     const i = storage.getPrimitive<boolean>(init, false)
     if (!i) {
-        storage.set(CONTRACT_OWNER, 'seadox3.testnet')
+        storage.set(CONTRACT_OWNER, owner)
         storage.set(init, true)
         storage.set(TOTAL_SUPPLY, 0)
+        const defaultCollection = new Collection("Nearfolio",
+            "Nearfolio default NFT Collection.",
+            "Nearfolio",
+            "http://www.nearfolio.io",
+            "http://www.nearfolio.io/logo.png",
+            [])
+        collections.set(0, defaultCollection)
     }
 }
 
@@ -91,6 +99,27 @@ export function get_contract_owner(): string {
     return storage.getSome<string>(CONTRACT_OWNER)
 }
 
+export function add_minter(minter: string): void {
+    assert(context.predecessor == get_contract_owner())
+    allowedMinters.set(minter, true)
+}
+
+export function get_minter(accountId: string): boolean {
+
+    return allowedMinters.getSome(accountId)
+}
+
+export function get_all_minters(): string[] {
+    const allMinters = allowedMinters.keys();
+    const result: string[] = []
+    for (let i = 0; i < allMinters.length; i++) {
+        const minter = allowedMinters.getSome(allMinters[i])
+        if (minter === true) {
+            result.push(allMinters[i])
+        }
+    }
+    return result
+}
 
 export function link_ethereum_wallet(eth_address: AccountId): void {
     ethAddressToNear.set(context.predecessor, eth_address)
@@ -298,13 +327,24 @@ function mint_token(
         const genreSales = salesByGenre.get(genre)
         if (genreSales) {
             genreSales.push(currentID);
+        } else {
+
         }
     }
-    if (collection_id) {
+    if (collection_id > 0) {
         const targetCollection = collections.getSome(collection_id)
+        if (targetCollection.owner == context.predecessor) {
+            targetCollection.tokens.push(currentID)
+            collections.set(collection_id, targetCollection)
+            logging.log('COLLECTION ID' + collection_id.toString())
+        }
+    } else {
+        const targetCollection = collections.getSome(0)
         targetCollection.tokens.push(currentID)
         collections.set(collection_id, targetCollection)
     }
+
+
     storage.set(TOTAL_SUPPLY, currentID + 1)
 }
 
@@ -320,6 +360,7 @@ export function mint_payment(name: string,
                              on_sale: string,
                              price: string): void {
     const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
+    assert(allowedMinters.get(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
     const creator = context.predecessor
     mint_token(name,
@@ -334,6 +375,37 @@ export function mint_payment(name: string,
         collection_id,
         on_sale,
         price)
+}
+
+export function batch_mint_payment(name: string,
+                                   description: string,
+                                   image_url: string,
+                                   background_color: string,
+                                   genre: string,
+                                   file: string, external_link: string,
+                                   traits: Trait[],
+                                   collection_id: CollectionId,
+                                   on_sale: string,
+                                   price: string,
+                                   amount: i32): void {
+    const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
+    assert(allowedMinters.get(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
+    ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
+    const creator = context.predecessor
+    for (let i = 0; i < amount; i++) {
+        mint_token(name,
+            description,
+            image_url,
+            background_color,
+            genre,
+            creator,
+            file,
+            external_link,
+            traits,
+            collection_id,
+            on_sale,
+            price)
+    }
 }
 
 export function get_token_details(id: u32): Token {
@@ -432,6 +504,31 @@ export function get_price(token_id: TokenId): TokenPrice | null {
     return tokenPrices.get(token_id)
 }
 
+export function get_recent_tokens(): DTOArray {
+    const length = tokenToOwner.length;
+    const result = new Array<DTO>();
+    let idx = 0
+    if (length > 20) {
+        for (let i = length - 19; i < length; i++) {
+            const token = tokens.get(i)
+            if (token) {
+                result[idx] = new DTO(token, i)
+                idx++
+            }
+        }
+    } else {
+        for (let i = 0; i < length; i++) {
+            const token = tokens.get(i)
+            if (token) {
+                result[idx] = new DTO(token, i)
+                idx++
+            }
+        }
+    }
+
+    return result
+}
+
 export function buy(token_id: TokenId): void {
     const buyer = context.predecessor;
     const price: TokenPrice = tokenPrices.getSome(token_id);
@@ -455,7 +552,7 @@ export function buy(token_id: TokenId): void {
 
 // COLLECTION FUNCTIONS
 export function create_collection(collection_name: CollectionName, description: string, image_url: string, external_url: string): void {
-    const currentCollectionId = storage.getPrimitive<u32>(TOTAL_COLLECTIONS, 0)
+    const currentCollectionId = storage.getPrimitive<u32>(TOTAL_COLLECTIONS, 1)
     const newCollection = new Collection(collection_name, description, context.predecessor, external_url, image_url, [])
     const hasCollection = accountToCollection.get(context.predecessor)
     if (hasCollection) {
@@ -487,7 +584,7 @@ export function burn_collection(collection_id: CollectionId): void {
 }
 
 
-export function get_collections(account_id: AccountId): CollectionDTO[] {
+export function get_collections_by_account_id(account_id: AccountId): CollectionDTO[] {
     const collectionIds: CollectionIdArray = accountToCollection.getSome(account_id)
     const result: CollectionDTO[] = new Array<CollectionDTO>(collectionIds.length)
     for (let i = 0; i < collectionIds.length; i++) {
@@ -500,4 +597,24 @@ export function get_collections(account_id: AccountId): CollectionDTO[] {
 
 export function get_collection_by_id(collection_id: CollectionId): Collection {
     return collections.getSome(collection_id)
+}
+
+export function get_collections(perPage: u32, page: u32): CollectionDTO[] {
+    const startIndex = (page * perPage) - perPage;
+    const endIndex = page * perPage
+    const results = new Array<CollectionDTO>();
+    let idx = 0
+    for (let i = startIndex; i < endIndex; i++) {
+        const coll = collections.get(i)
+        if (coll) {
+            coll.tokens = []
+            results[idx] = new CollectionDTO(i, coll)
+            idx++
+        }
+    }
+    return results
+}
+
+export function total_collections(): u32 {
+    return collections.length
 }

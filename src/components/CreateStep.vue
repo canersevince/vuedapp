@@ -4,7 +4,7 @@
     <div class="flex">
       <div class="w-1/3 text-center px-6">
         <div
-            :class="$store.state.createStep == 1 ? 'bg-indigo-500' : 'bg-gray-300'"
+            :class="$store.state.createStep == 1 ? 'custom-red' : 'bg-gray-300'"
             class="rounded-lg flex items-center justify-center border border-gray-200">
           <div class="w-1/3 bg-transparent h-20 flex items-center justify-center icon-step">
             <i class="fa fa-align-center"></i>
@@ -23,7 +23,7 @@
         </svg>
       </div>
       <div class="w-1/3 text-center px-6">
-        <div :class="$store.state.createStep == 2 ? 'bg-indigo-500' : 'bg-gray-300'"
+        <div :class="$store.state.createStep == 2 ? 'custom-red' : 'bg-gray-300'"
              class="rounded-lg flex items-center justify-center border border-gray-200">
           <div class="w-1/3 bg-transparent h-20 flex items-center justify-center icon-step">
             <i class="fa fa-file"></i>
@@ -42,7 +42,7 @@
         </svg>
       </div>
       <div class="w-1/3 text-center px-6">
-        <div :class="$store.state.createStep == 3 ? 'bg-indigo-500' : 'bg-gray-300'"
+        <div :class="$store.state.createStep == 3 ? 'custom-red' : 'bg-gray-300'"
              class="rounded-lg flex items-center justify-center border border-gray-200">
           <div class="w-1/3 bg-transparent h-20 flex items-center justify-center icon-step">
             <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">

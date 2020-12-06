@@ -8,6 +8,9 @@ export const mutations = {
     },
     updateAdmin(state, payload){
         state.admin = payload
+    },
+    updateMinter(state){
+        state.minter = true
     }
 }
 

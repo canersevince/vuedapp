@@ -11,7 +11,7 @@ import CreateForm from "@/components/CreateForm";
 
 export default {
   name: "create",
-  components: {CreateForm, CreateStep}
+  components: {CreateForm, CreateStep},
 }
 </script>
 

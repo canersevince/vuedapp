@@ -76,7 +76,7 @@
                   v-model="new_trait_value"
                   class="flex-1 appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-2 leading-tight focus:outline-none focus:bg-white"
                   id="trait-value" type="text" placeholder="Value">
-              <button @click="addNewTrait" class="px-5 py-3 mx-auto bg-indigo-500 radius-xl border text-white">Add Trait
+              <button @click="addNewTrait" class="px-5 py-3 mx-auto custom-red radius-xl border text-white">Add Trait
               </button>
             </div>
           </div>
@@ -108,7 +108,7 @@
             <input
                 v-model="is_collection"
                 type="checkbox"
-                class="select form-checkbox h-5 w-5 text-pink-600 block mt-3"
+                class="select form-checkbox custom-red h-5 w-5 text-pink-600 block mt-3"
                 id="is_collection">
           </div>
           <div class="w-full px-3" v-if="is_collection">
@@ -117,16 +117,16 @@
             </label>
             <select
                 v-if="collections.length>0"
-                v-model="token.collection_name"
+                v-model="token.collection_id"
                 class="block appearance-none w-full bg-gray-200 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 id="grid-collection">
-              <option :key="collectionDTO.id" v-for="collectionDTO in collections">{{
+              <option :value="collectionDTO.id" :key="collectionDTO.id" v-for="collectionDTO in collections">{{
                   collectionDTO.collection.name
                 }}
               </option>
             </select>
             <div v-else class="w-full">
-              <button @click="createCollection" class="px-3 py-2 mx-auto bg-indigo-500 radius-xl border text-white">
+              <button @click="createCollection" class="px-3 py-2 mx-auto custom-red radius-xl border text-white">
                 Create New Collection
               </button>
               <p class="text-sm text-gray-400 mt-1">Looks like you don't have any collection yet.</p>
@@ -141,7 +141,7 @@
             <input
                 v-model="on_sale"
                 type="checkbox"
-                class="select form-checkbox h-5 w-5 text-pink-600 block mt-3"
+                class="select form-checkbox custom-red h-5 w-5 text-pink-600 block mt-3"
                 id="grid-select">
             <p class="text-gray-400 text-xs mt-2">You can always put it on sale.</p>
           </div>
@@ -152,7 +152,7 @@
             <input
                 v-model="is_audio"
                 type="checkbox"
-                class="select form-checkbox h-5 w-5 text-pink-600 block mt-3"
+                class="select form-checkbox custom-red h-5 w-5 text-pink-600 block mt-3"
                 id="grid-audio">
           </div>
           <div class="w-full md:w-1/3 px-3 mb-6 md:mb-0"
@@ -192,12 +192,12 @@
         <button
             v-if="$store.state.createStep == 2"
             @click="mintToken"
-            class="shadow-md hover:text-purple-500 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
+            class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
           Mint<i class="fa fa-chevron-right ml-1"></i></button>
         <button
             v-if="$store.state.createStep <2"
             @click="nextStep"
-            class="shadow-md hover:text-purple-500 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
+            class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
           Next<i class="fa fa-chevron-right ml-1"></i></button>
       </div>
     </div>
@@ -227,7 +227,7 @@ export default {
         genre: null,
         external_link: "",
         traits: [],
-        collection_name: "",
+        collection_id: null,
       },
       new_trait_name: "",
       new_trait_value: "",
@@ -273,14 +273,19 @@ export default {
       })
     },
     validate() {
+      console.log(this.token)
+      if (this.is_collection) {
+        if (this.token.collection_id === null) {
+          return false;
+        }
+      }
       return !(this.token.name.length === 0 || this.token.description.length === 0);
-
     },
     async mintToken() {
       if (!this.validate()) {
         Swal.fire({
           title: "Warning!",
-          text: "Please fill the all required fields.",
+          text: "Please fill the all required fields. A token must have a valid name, description and collection name if it is part of a collection",
           icon: "warning",
           closable: true
         })
@@ -295,27 +300,49 @@ export default {
         file: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
         external_link: this.token.external_link,
         traits: this.token.traits,
-        collection_name: this.token.collection_name,
+        collection_id: this.is_collection ? this.token.collection_id : 0,
         on_sale: this.on_sale,
         price: await utils.format.parseNearAmount(this.token.price)
       }
-      const formatted = await utils.format.parseNearAmount("1")
-      window.contract.mint_payment({
-        name: token.name,
-        description: token.description,
-        image_url: token.image_url,
-        background_color: token.background_color,
-        genre: token.genre,
-        file: token.file,
-        external_link: token.external_link,
-        traits: token.traits,
-        collection_name: token.collection_name,
-        on_sale: token.on_sale ? '1' : null,
-        price: token.price
-      }, 300000000000000, formatted)
-          .then((response) => {
-            console.log(response)
-          }).catch((error) => console.log(error))
+      if (this.token.amount > 1) {
+        const formatted = await utils.format.parseNearAmount(this.token.amount.toString(),)
+        window.contract.batch_mint_payment({
+          name: token.name,
+          description: token.description,
+          image_url: token.image_url,
+          background_color: token.background_color,
+          genre: token.genre,
+          file: token.file,
+          external_link: token.external_link,
+          traits: token.traits,
+          collection_id: token.collection_id,
+          on_sale: token.on_sale ? '1' : null,
+          price: token.price,
+          amount: parseInt(this.token.amount)
+        }, 300000000000000, formatted)
+            .then((response) => {
+              console.log(response)
+            }).catch((error) => console.log(error))
+      } else {
+        const formatted = await utils.format.parseNearAmount("1")
+        window.contract.mint_payment({
+          name: token.name,
+          description: token.description,
+          image_url: token.image_url,
+          background_color: token.background_color,
+          genre: token.genre,
+          file: token.file,
+          external_link: token.external_link,
+          traits: token.traits,
+          collection_id: token.collection_id,
+          on_sale: token.on_sale ? '1' : null,
+          price: token.price
+        }, 300000000000000, formatted)
+            .then((response) => {
+              console.log(response)
+            }).catch((error) => console.log(error))
+      }
+
     }
   },
 
@@ -336,10 +363,16 @@ export default {
     }).catch((error) => console.log(error))
   },
   mounted() {
-    window.contract.get_collections({account_id: window.accountId}).then(res => {
+    window.contract.get_collections_by_account_id({account_id: window.accountId}).then(res => {
+      console.log(res)
+      console.log(res)
+      console.log(res)
       console.log(res)
       this.collections = res
     }).catch((error) => console.log(error))
+  },
+  beforeDestroy() {
+    this.$store.commit('resetStep')
   }
 }
 </script>

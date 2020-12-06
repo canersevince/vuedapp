@@ -1,23 +1,33 @@
 <template>
   <div id="root">
+    {{isLoading  ? 'true' : 'false'}}
     <Navigation/>
     <router-view/>
+    <Loader v-if="isLoading"></Loader>
+    <Footer></Footer>
   </div>
 </template>
 
 <script>
 import "./global.css"
 import Navigation from "@/components/Nav";
+import Loader from "@/components/Loader";
+import Footer from "@/components/Footer";
 
 export default {
   name: "App",
   components: {
     Navigation,
+    Loader,
+    Footer
   },
   computed: {
     isSignedIn() {
       return window.walletConnection.isSignedIn()
     },
+    isLoading(){
+      return this.$store.getters.getLoading
+    }
   },
   methods: {
     async threeBox() {
@@ -142,4 +152,11 @@ export default {
 }
 
 
+.nav-custom-red {
+  background-color: #782634 !important;
+  z-index: 9999;
+}
+.custom-red{
+  background-color: #782634 !important;
+}
 </style>
