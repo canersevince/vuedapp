@@ -17,7 +17,7 @@
             <router-link
                 tag="li" :to="`/browse/curated`" exact-active-class="bg-gray-200"
                 class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
-              Popular
+              Curated
             </router-link>
             <li
                 class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
@@ -86,7 +86,6 @@ export default {
             for (const token of tokens) {
               const response = await window.contract.get_price({token_id: token.id})
               if (response) {
-                console.log(response)
                 token.price = utils.format.formatNearAmount(response)
               }
             }
@@ -111,7 +110,6 @@ export default {
         this.browsingTokens = data.reverse()
         this.showEmpty = this.browsingTokens.length === 0
       } catch (e) {
-        console.log(e)
         console.log(e)
       }
     }

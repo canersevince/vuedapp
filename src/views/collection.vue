@@ -60,7 +60,6 @@ export default {
           this.$store.commit('saveUserCollection', myTokens)
           this.$store.commit('hideLoader')
         }
-        console.log(myTokens)
       } catch (e) {
         console.log(e)
         this.is_loaded = true

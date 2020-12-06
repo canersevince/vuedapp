@@ -5,11 +5,13 @@
         <input v-model="minter" type="text" class="px-8 py-3 border" placeholder="Add Minter"/>
         <button @click="addMinter" class="custom-red text-white py-3 px-8">Add</button>
       </div>
-      <div class="col-span-6">
+      <div class="col-span-6 border p-2">
         <h1 class="text-xl font-bold font-major">Artists:</h1>
-        <ul>
-          <li>
-
+        <ul class="list list-reset list-none">
+          <li v-for="minter in minters" :key="minter"
+              class="py-1 my-1text-sm font-bold font-major flex items-center justify-between">
+            <router-link :to="'profile/'+minter" class>{{ minter }}</router-link>
+            <i class="cursor-pointer bg-gray-200 radius fa fa-times p-2 text-red-500"></i>
           </li>
         </ul>
       </div>

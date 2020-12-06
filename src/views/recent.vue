@@ -40,10 +40,8 @@ export default {
       try {
         const data = await window.contract.get_recent_tokens()
         this.recentTokens = data.reverse()
-        console.log(this.recentTokens)
         this.showEmpty = this.recentTokens.length === 0
       } catch (e) {
-        console.log(e)
         console.log(e)
       }
     }

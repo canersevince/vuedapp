@@ -32,7 +32,6 @@ export default {
     async threeBox() {
       if (window.ethereum && window.ethereum.selectedAddress) {
         const profile = await Box.getProfile(window.ethereum.selectedAddress)
-        console.log(profile)
         const box = await Box.openBox(window.ethereum.selectedAddress, window.ethereum)
         await this.$store.dispatch('set3Box', profile)
       }
@@ -40,7 +39,6 @@ export default {
   },
   watch: {
     isSignedIn(val) {
-      console.log(val)
       if (val === true) {
         this.$store.dispatch('auth/login', window.accountId)
         this.threeBox()

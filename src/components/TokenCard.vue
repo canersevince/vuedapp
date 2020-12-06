@@ -30,7 +30,8 @@
           {{ tokenObj.creator }}
         </p>
       </a>
-      <a class="no-underline flex block ml-6 items-center ml-auto justify-between text-grey-darker hover:text-red-dark" href="#">
+      <a class="no-underline flex block ml-6 items-center ml-auto justify-between text-grey-darker hover:text-red-dark"
+         href="#">
         <span class="block w-full text-sm" v-if="!fetch_price && price" @click="remove_from_sale">{{
             price
           }} <strong>Ⓝ</strong></span>
@@ -74,10 +75,8 @@ export default {
       }
     },
     async fetch_price$() {
-      console.log('Fetching.')
       try {
         const response = await window.contract.get_price({token_id: this.id})
-        console.log(response)
         this.fetchedPrice = utils.format.formatNearAmount(response)
       } catch (e) {
         console.log(e)
