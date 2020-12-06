@@ -1,6 +1,5 @@
 <template>
   <div id="root">
-    {{isLoading  ? 'true' : 'false'}}
     <Navigation/>
     <router-view/>
     <Loader v-if="isLoading"></Loader>

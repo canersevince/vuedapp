@@ -10,8 +10,8 @@
           <h1 class="mx-auto uppercase text-gray-700 text-center text-xl font-bold mt-2">Visual Art</h1>
           <ul class="list list-none">
             <li @click="fetchRecent" :class="isActive('recent')? 'bg-gray-200' : ''"
-                         :exact="true"
-                         class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
+                :exact="true"
+                class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
               Recent
             </li>
             <router-link
@@ -35,7 +35,8 @@
         <div class="col-span-12 lg:col-span-9 gap-1 px-5">
           <div class="grid grid-cols-12 gap-2">
             <div v-for="tokenObject in browsingTokens" :key="tokenObject.id" class="col-span-4">
-              <TokenCard :price="tokenObject.price" :is_owner="false" :id="tokenObject.id" :token="tokenObject.token"/>
+              <TokenCard :price="tokenObject.price" :fetch_price="true" :is_owner="false" :id="tokenObject.id"
+                         :token="tokenObject.token"/>
               <p v-if="browsingTokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
             </div>
           </div>
@@ -70,7 +71,7 @@ export default {
     searchByArtist() {
       this.$router.push(`/browse/artist/${this.artistName}/1`).then(() => this.browseArtist())
     },
-    isActive(a){
+    isActive(a) {
       return this.$route.path.toLowerCase().indexOf(a) > -1
     },
     async browseArtist() {
@@ -85,8 +86,6 @@ export default {
             for (const token of tokens) {
               const response = await window.contract.get_price({token_id: token.id})
               if (response) {
-                console.log(response)
-                console.log(response)
                 console.log(response)
                 token.price = utils.format.formatNearAmount(response)
               }
