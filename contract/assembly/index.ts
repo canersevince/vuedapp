@@ -388,6 +388,7 @@ export function batch_mint_payment(name: string,
                                    on_sale: string,
                                    price: string,
                                    amount: i32): void {
+
     const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
     assert(allowedMinters.get(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
