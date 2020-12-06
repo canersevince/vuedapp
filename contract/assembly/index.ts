@@ -1,14 +1,14 @@
 import {
     context,
     ContractPromiseBatch,
+    logging,
     PersistentMap,
     PersistentUnorderedMap,
     storage,
-    u128,
-    logging
+    u128
 } from "near-sdk-as";
 
-import {Token, TokenId, tokens} from './model'
+import {Collection, collections, Token, TokenId, tokens, Trait} from './model'
 
 
 /**************************/
@@ -16,21 +16,26 @@ import {Token, TokenId, tokens} from './model'
 /**************************/
 
 type TokenIdArray = u32[]
+export type CollectionId = u32
+export type CollectionIdArray = CollectionId[]
 export type AccountId = string
 type TokenPrice = u128;
-// Note that MAX_SUPPLY is implemented here as a simple constant
-// It is exported only to facilitate unit testing
-// The strings used to index variables in storage can be any string
-// Let's set them to single characters to save storage space
+type CollectionName = string
+type Genre = string
+
+
+const ethAddressToNear = new PersistentMap<AccountId, AccountId>('n');
 const tokenToOwner = new PersistentUnorderedMap<TokenId, AccountId>('a')
 const escrowAccess = new PersistentMap<AccountId, AccountId[]>('e')
 const getTokensOfAccountId = new PersistentMap<AccountId, TokenIdArray>('g')
-const sales = new PersistentMap<TokenId, TokenPrice>('s')
-// This is a key in storage used to track the current minted supply
+const tokenPrices = new PersistentMap<TokenId, TokenPrice>('s')
+const salesByGenre = new PersistentMap<Genre, TokenId[]>('h')
+const allowedMinters = new PersistentUnorderedMap<AccountId, boolean>('x')
+const accountToCollection = new PersistentUnorderedMap<AccountId, CollectionIdArray>('c')
 const TOTAL_SUPPLY = 't'
+const TOTAL_COLLECTIONS = 'q'
 const init = "i"
 const CONTRACT_OWNER = "m"
-
 
 @nearBindgen
 class DTO {
@@ -39,7 +44,21 @@ class DTO {
     }
 }
 
+@nearBindgen
+class CollectionDTO {
+    constructor(public id: CollectionId,
+                public collection: Collection) {
+    }
+}
+
+@nearBindgen
+class SaleDTO {
+    constructor(public token: Token, public id: TokenId, public price: TokenPrice) {
+    }
+}
+
 type DTOArray = DTO[]
+type RecentSale = SaleDTO
 
 /******************/
 /* ERROR MESSAGES */
@@ -66,6 +85,15 @@ export function launch(): void {
         storage.set(init, true)
         storage.set(TOTAL_SUPPLY, 0)
     }
+}
+
+export function get_contract_owner(): string {
+    return storage.getSome<string>(CONTRACT_OWNER)
+}
+
+
+export function link_ethereum_wallet(eth_address: AccountId): void {
+    ethAddressToNear.set(context.predecessor, eth_address)
 }
 
 // Grant access to the given `accountId` for all tokens the caller has
@@ -233,60 +261,93 @@ export function get_token_owner(token_id: TokenId): string | null {
 function mint_token(
     name: string,
     description: string,
-    image: string,
-    owner: string): void {
-    let balance: TokenIdArray | null = getTokensOfAccountId.get(owner)
+    image_url: string,
+    background_color: string,
+    genre: string,
+    creator: AccountId,
+    file: string,
+    external_link: string,
+    traits: Trait[],
+    collection_id: CollectionId,
+    on_sale: string,
+    price: string
+): void {
+    let balance: TokenIdArray | null = getTokensOfAccountId.get(creator)
     if (!balance) {
         balance = new Array<TokenId>();
     }
     const currentID = storage.getPrimitive<u32>(TOTAL_SUPPLY, 0)
-    const new_token = new Token(name, image, description);
+    const new_token: Token = new Token(
+        name,
+        description,
+        image_url,
+        background_color,
+        genre,
+        creator,
+        file,
+        external_link,
+        traits,
+        collection_id,
+    );
     balance.push(currentID)
     tokens.set(currentID, new_token)
-    tokenToOwner.set(currentID, owner)
-    getTokensOfAccountId.set(owner, balance)
+    tokenToOwner.set(currentID, creator)
+    getTokensOfAccountId.set(creator, balance)
+    if (on_sale == '1') {
+        put_token_to_sale(currentID, price)
+        const genreSales = salesByGenre.get(genre)
+        if (genreSales) {
+            genreSales.push(currentID);
+        }
+    }
+    if (collection_id) {
+        const targetCollection = collections.getSome(collection_id)
+        targetCollection.tokens.push(currentID)
+        collections.set(collection_id, targetCollection)
+    }
     storage.set(TOTAL_SUPPLY, currentID + 1)
 }
 
-export function batch_mint(
-    name: string,
-    description: string,
-    image: string,
-    amount: i32,
-    owner: string): void {
-}
 
-export function mint_payment(name: string, description: string, image: string): void {
+export function mint_payment(name: string,
+                             description: string,
+                             image_url: string,
+                             background_color: string,
+                             genre: string,
+                             file: string, external_link: string,
+                             traits: Trait[],
+                             collection_id: CollectionId,
+                             on_sale: string,
+                             price: string): void {
     const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
-    const owner = context.predecessor
-    mint_token(name, description, image, owner)
+    const creator = context.predecessor
+    mint_token(name,
+        description,
+        image_url,
+        background_color,
+        genre,
+        creator,
+        file,
+        external_link,
+        traits,
+        collection_id,
+        on_sale,
+        price)
 }
 
-export function batch_mint_payment(name: string, description: string, image: string, amount: i32): void {
-    const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
-    ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
-    const owner = context.predecessor
-    batch_mint(name, description, image, amount, owner)
-}
-
-export function get_token_details(id: i32): void {
-
+export function get_token_details(id: u32): Token {
+    return tokens.getSome(id)
 }
 
 export function get_tokens(accountId: string): DTOArray | null {
     const TokenIds = getTokensOfAccountId.get(accountId)
     assert(TokenIds && TokenIds.length > 0, "ACCOUNT HAS NO BALANCE")
     if (TokenIds) {
-        /* const result = new Array<Token>(TokenIds.length);
-         for (let i = 0; i < TokenIds.length; i++) {
-             const parsed: TokenId = i32(TokenIds[i])
-             result[i] = tokens.getSome(parsed)
-         }*/
         const payload: DTOArray = new Array<DTO>(TokenIds.length);
 
         for (let i = 0; i < TokenIds.length; i++) {
-            const parsed: TokenId = i32(TokenIds[i])
+            const parsed: TokenId = u32(TokenIds[i])
             payload[i] = new DTO(tokens.getSome(parsed), TokenIds[i])
         }
         return payload
@@ -307,6 +368,21 @@ export function get_owned_token_ids(accountId: string): TokenId[] | null {
     return null
 }
 
+export function get_tokens_by_collection(collectionId: CollectionId): DTO[] {
+    const collectionObj = collections.getSome(collectionId)
+    if (collectionObj) {
+        const result: DTO[] = new Array<DTO>(collectionObj.tokens.length)
+        for (let i = 0; i < collectionObj.tokens.length; i++) {
+            const token = collectionObj.tokens[i];
+            if (token) {
+                result[i] = new DTO(tokens.getSome(token), token)
+            }
+        }
+        return result
+    }
+    return []
+}
+
 export function get_escrow_tokens(account_id: AccountId): DTOArray | null {
     if (check_access_internally(account_id, context.predecessor)) {
         return get_tokens(account_id)
@@ -318,12 +394,21 @@ export function get_escrow_tokens(account_id: AccountId): DTOArray | null {
 // TRADE FUNCTIONS.
 export function put_token_to_sale(token_id: TokenId, price: string): void {
     assert(tokenToOwner.get(token_id) == context.predecessor, ERROR_OWNER_ID_DOES_NOT_MATCH_EXPECTATION);
-    sales.set(token_id, u128.from(price))
+    const tokenObj = tokens.getSome(token_id)
+    let salesOnGenre = salesByGenre.get(tokenObj.genre)
+    if (salesOnGenre && salesOnGenre.length > 0) {
+        salesOnGenre.push(token_id)
+    } else {
+        salesOnGenre = new Array<TokenId>()
+        salesOnGenre.push(token_id)
+    }
+    salesByGenre.set(tokenObj.genre, salesOnGenre)
+    tokenPrices.set(token_id, u128.from(price))
 }
 
-export function cancel_sale(token_id: TokenId, price: TokenPrice): void {
+export function cancel_sale(token_id: TokenId): void {
     assert(tokenToOwner.get(token_id) == context.predecessor);
-    sales.delete(token_id);
+    tokenPrices.delete(token_id);
 }
 
 export function get_sales(account_id: AccountId): DTOArray | null {
@@ -332,7 +417,7 @@ export function get_sales(account_id: AccountId): DTOArray | null {
         const result: DTOArray = new Array<DTO>();
         let idx = 0;
         for (let i = 0; i < userTokens.length; i++) {
-            const price = sales.get(userTokens[i])
+            const price = tokenPrices.get(userTokens[i])
             if (price) {
                 result[idx] = new DTO(tokens.get(userTokens[i]) as Token, userTokens[i])
                 idx++
@@ -344,12 +429,12 @@ export function get_sales(account_id: AccountId): DTOArray | null {
 }
 
 export function get_price(token_id: TokenId): TokenPrice | null {
-    return sales.get(token_id)
+    return tokenPrices.get(token_id)
 }
 
 export function buy(token_id: TokenId): void {
     const buyer = context.predecessor;
-    const price: TokenPrice = sales.getSome(token_id);
+    const price: TokenPrice = tokenPrices.getSome(token_id);
     const owner = tokenToOwner.get(token_id, "")
 
     if (!price || !owner) {
@@ -365,5 +450,54 @@ export function buy(token_id: TokenId): void {
     logging.log('PRICE: ' + price.toString() as string + 'Deposit: ' + context.attachedDeposit.toString())
     ContractPromiseBatch.create(owner as string).transfer(context.attachedDeposit)
     move_token(owner as string, token_id, buyer)
-    sales.delete(token_id)
+    tokenPrices.delete(token_id)
+}
+
+// COLLECTION FUNCTIONS
+export function create_collection(collection_name: CollectionName, description: string, image_url: string, external_url: string): void {
+    const currentCollectionId = storage.getPrimitive<u32>(TOTAL_COLLECTIONS, 0)
+    const newCollection = new Collection(collection_name, description, context.predecessor, external_url, image_url, [])
+    const hasCollection = accountToCollection.get(context.predecessor)
+    if (hasCollection) {
+        hasCollection.push(currentCollectionId)
+        accountToCollection.set(context.predecessor, hasCollection)
+    } else {
+        accountToCollection.set(context.predecessor, [currentCollectionId])
+    }
+    collections.set(currentCollectionId, newCollection)
+    storage.set(TOTAL_COLLECTIONS, currentCollectionId + 1)
+}
+
+export function burn_collection(collection_id: CollectionId): void {
+    const collection = collections.getSome(collection_id)
+    assert(context.predecessor == collection.owner)
+    collections.delete(collection_id)
+    const collectionsByUser = accountToCollection.get(context.predecessor)
+    if (collectionsByUser && collectionsByUser.length > 0) {
+        let idx: i32 = -1;
+        for (let i = 0; i < collectionsByUser.length; i++) {
+            if (collectionsByUser[i] == collection_id) {
+                idx = i as u32
+            }
+        }
+        if (idx < 0) return;
+        collectionsByUser.splice(idx, 1)
+        accountToCollection.set(context.predecessor, collectionsByUser)
+    }
+}
+
+
+export function get_collections(account_id: AccountId): CollectionDTO[] {
+    const collectionIds: CollectionIdArray = accountToCollection.getSome(account_id)
+    const result: CollectionDTO[] = new Array<CollectionDTO>(collectionIds.length)
+    for (let i = 0; i < collectionIds.length; i++) {
+        const coll = collections.getSome(collectionIds[i])
+        coll.tokens = []
+        result[i] = new CollectionDTO(collectionIds[i], coll)
+    }
+    return result;
+}
+
+export function get_collection_by_id(collection_id: CollectionId): Collection {
+    return collections.getSome(collection_id)
 }

@@ -21,18 +21,24 @@ export async function initContract() {
         viewMethods: [
             "get_token_owner",
             "get_tokens",
+            "get_tokens_by_collection",
             "get_owned_token_ids",
             "get_token_details",
             "withdraw",
             "get_price",
-            "get_sales"
+            "get_sales",
+            "get_contract_owner",
+            "get_collections",
+            "get_collection_by_id"
         ],
         // Change methods can modify the state. But you don't receive the returned value when called.
         changeMethods: [
             "mint_payment", "batch_mint_payment", "mint_token",
             "batch_mint", "launch", "get_escrow_tokens", "grant_access",
             "revoke_access", "transfer_from", "transfer", "clear", "check_access",
-            "put_token_to_sale", "cancel_sale", "buy"
+            "put_token_to_sale", "cancel_sale", "buy",
+            "create_collection",
+            "burn_collection"
         ],
     })
 }

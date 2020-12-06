@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Recent",
+    "to": "/recent"
+  },
+  {
+    "name": "Browse",
+    "to": "/browse"
+  },
+  {
+    "name": "My Collection",
+    "to": "/my_collection"
+  },
+  {
+    "name": "News",
+    "to": "/news"
+  },
+  {
+    "name": "Mint Token",
+    "to": "/create"
+  },
+  {
+    "name": "Create Collection",
+    "to": "/create/collection"
+  }
+]

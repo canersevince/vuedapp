@@ -20,10 +20,13 @@
     "lint": "eslint . --ext .js --ext .vue --fix"
   },
   "dependencies": {
+    "axios": "^0.21.0",
     "big.js": "^6.0.2",
     "core-js": "~3.6.5",
     "crypto-js": "^4.0.0",
     "near-api-js": "^0.34.0",
+    "sweetalert2": "^10.11.1",
+    "verte": "^0.0.12",
     "vue": "~2.6.11",
     "vue-router": "^3.4.9",
     "vuex": "^3.6.0"
@@ -34,6 +37,7 @@
     "@vue/cli-plugin-unit-jest": "~4.5.4",
     "@vue/cli-service": "~4.5.8",
     "@vue/test-utils": "~1.1.1",
+    "autoprefixer": "^9",
     "env-cmd": "~10.1.0",
     "eslint": "~7.12.1",
     "eslint-plugin-vue": "~7.1.0",
@@ -41,8 +45,10 @@
     "near-cli": "~1.2.0",
     "node-sass": "^5.0.0",
     "nodemon": "~2.0.4",
+    "postcss": "^7",
     "sass-loader": "^10.1.0",
     "shelljs": "~0.8.4",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
     "vue-template-compiler": "~2.6.11"
   },
   "eslintConfig": {

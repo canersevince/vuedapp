@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Major+Mono+Display&display=swap');
-
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css');
 .font-major {
-    font-family: 'Major Mono Display', sans-serif;
+    font-family: 'Major Mono Display';
 }
