@@ -239,7 +239,7 @@ export default {
       const user = window.contract.account.accountId
       if (user !== res) return;
       this.is_admin = window.accountId === res
-      this.$store.commit('updateAdmin', this.is_admin = window.accountId === res)
+      this.$store.commit('updateAdmin', window.accountId === res)
     }).catch(err => console.log(err))
     window.contract.get_minter({accountId: accountId}).then(res => {
       if (res) {
