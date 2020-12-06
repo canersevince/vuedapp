@@ -236,11 +236,10 @@ export default {
   async beforeMount() {
     window.contract.get_contract_owner().then(res => {
       console.log(res)
-      this.is_admin = res
       const user = window.contract.account.accountId
       if (user !== res) return;
-      this.$store.commit('updateAdmin', true)
-      this.is_admin = true
+      this.is_admin = window.accountId === res
+      this.$store.commit('updateAdmin', this.is_admin = window.accountId === res)
     }).catch(err => console.log(err))
     window.contract.get_minter({accountId: accountId}).then(res => {
       if (res) {
