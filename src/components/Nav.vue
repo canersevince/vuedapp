@@ -59,7 +59,7 @@
                   :to="'/create'"
                   exact-active-class="bg-gray-900 text-white"
                   :exact="true"
-                  v-if="is_minter"
+                  v-if="is_admin"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                 Admin
               </router-link>
@@ -77,7 +77,7 @@
                   :to="'/admin'"
                   exact-active-class="bg-gray-900 text-white"
                   :exact="true"
-                  v-if="is_admin"
+                  v-if="is_minter"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                 Mint NFT
               </router-link>
