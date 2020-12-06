@@ -61,7 +61,7 @@
                   :exact="true"
                   v-if="is_admin"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                Admin
+                Mint NFT
               </router-link>
               <router-link
                   tag="a"
@@ -79,7 +79,7 @@
                   :exact="true"
                   v-if="is_minter"
                   class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                Mint NFT
+                Admin
               </router-link>
             </div>
           </div>
