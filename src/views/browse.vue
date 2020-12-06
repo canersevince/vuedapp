@@ -9,11 +9,11 @@
         <div class="bg-gray-100 col-span-12 shadow-md md:col-span-3 border rounded-md border-grey-100">
           <h1 class="mx-auto uppercase text-gray-700 text-center text-xl font-bold mt-2">Visual Art</h1>
           <ul class="list list-none">
-            <router-link tag="li" :to="`/browse/recent`" exact-active-class="bg-gray-200"
+            <li @click="fetchRecent" :class="isActive('recent')? 'bg-gray-200' : ''"
                          :exact="true"
                          class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
               Recent
-            </router-link>
+            </li>
             <router-link
                 tag="li" :to="`/browse/curated`" exact-active-class="bg-gray-200"
                 class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
@@ -69,6 +69,9 @@ export default {
   methods: {
     searchByArtist() {
       this.$router.push(`/browse/artist/${this.artistName}/1`).then(() => this.browseArtist())
+    },
+    isActive(a){
+      return this.$route.path.toLowerCase().indexOf(a) > -1
     },
     async browseArtist() {
       const artist = this.$route.params.name
