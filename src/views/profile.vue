@@ -72,15 +72,32 @@
         </div>
       </div>
     </div>
+    <div v-else class="container mx-auto py-6">
+      <div class="grid grid-cols-12">
+        <div class="col-span-12 gap-1 px-5">
+          <div class="grid grid-cols-12 gap-6">
+            <div :key="collectionObj.id" v-for="collectionObj in collections" class="col-span-12 md:col-span-4">
+              <CollectionCard :id="collectionObj.id" :collection="collectionObj.collection"/>
+              <p v-if="collectionObj.length === 0" class="text-red-500 text-md">There are no collections created,
+                yet...</p>
+            </div>
+          </div>
+          <div v-if="showEmpty">
+            LOOKS LIKE THERE IS NOTHING HERE...
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script>
 import TokenCard from "@/components/TokenCard";
-
+import CollectionCard from '@/components/CollectionCard'
 export default {
   name: "profile",
-  components: {TokenCard},
+  components: {TokenCard, CollectionCard},
   data() {
     return {
       activeTab: "token",
