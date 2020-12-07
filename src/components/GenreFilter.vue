@@ -41,7 +41,7 @@ export default {
       if (this.genres && this.filterWord.length > 0) {
         return this.genres.filter(genre => genre.toLowerCase().includes(this.filterWord))
       }
-      return this.genres.slice(0, 5)
+      return this.genres.slice(0, 10)
     }
   },
   created() {

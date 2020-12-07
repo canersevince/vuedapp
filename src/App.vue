@@ -157,4 +157,8 @@ export default {
 .custom-red {
   background-color: #782634 !important;
 }
+
+.text-custom-red{
+  color: #782634 !important;
+}
 </style>

@@ -129,10 +129,12 @@
                 role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
               <UserInfoContainer :mobile="true" @click="toggleUser"></UserInfoContainer>
 
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Collector
-                Profile</a>
-              <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Account</a>
-              <a @click.prevent="logout" href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              <router-link to="/account" href="#" exact-active-class="bg-gray-400"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
+                           role="menuitem">Account
+              </router-link>
+              <a @click.prevent="logout"
+                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
                  role="menuitem">Sign out</a>
             </div>
           </div>
@@ -172,6 +174,33 @@
             :exact="true"
             class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium block">
           {{ nav_item.name }}
+        </router-link>
+        <router-link
+            tag="a"
+            :to="'/create'"
+            exact-active-class="bg-gray-900 text-white"
+            :exact="true"
+            v-if="is_minter"
+            class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium block">
+          Mint NFT
+        </router-link>
+        <router-link
+            tag="a"
+            :to="'/create/collection'"
+            exact-active-class="bg-gray-900 text-white"
+            :exact="true"
+            v-if="is_minter"
+            class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium block">
+          Create Collection
+        </router-link>
+        <router-link
+            tag="a"
+            :to="'/admin'"
+            exact-active-class="bg-gray-900 text-white"
+            :exact="true"
+            v-if="is_admin"
+            class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium block">
+          Admin
         </router-link>
       </div>
     </div>

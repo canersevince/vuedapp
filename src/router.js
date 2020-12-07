@@ -4,6 +4,8 @@ import VueRouter from 'vue-router'
 import store from "@/store";
 // eslint-disable
 const Home = () => import(/* webpackChunkName: "home" */ '@/views/index.vue')
+const Profile = () => import(/* webpackChunkName: "browse" */ '@/views/profile.vue')
+const Account = () => import(/* webpackChunkName: "browse" */ '@/views/account.vue')
 const Browse = () => import(/* webpackChunkName: "browse" */ '@/views/browse.vue')
 const Recent = () => import(/* webpackChunkName: "recent" */ '@/views/recent.vue')
 const BrowseCollection = () => import(/* webpackChunkName: "browse-collection" */ '@/views/browse_collections')
@@ -24,7 +26,23 @@ const routes = [
         component: Recent
     },
     {
+        path: "/profile/:id",
+        component: Profile
+    },
+    {
         path: "/browse",
+        component: Browse
+    },
+    {
+        path: "/browse/recent/:page",
+        component: Browse
+    },
+    {
+        path: "/browse/artist/:name/:page",
+        component: Browse
+    },
+    {
+        path: "/browse/genre/:genre",
         component: Browse
     },
     {
@@ -44,19 +62,18 @@ const routes = [
         component: MyCollection
     },
     {
-        path: "/browse/artist/:name/:page",
-        component: Browse
-    },
-    {
-        path: "/browse/:genre",
-        component: Browse
-    },
-    {
         path: "/admin",
         component: Admin,
         meta: {
             requiresAuth: true,
             requiresAdmin: true
+        }
+    },
+    {
+        path: "/account",
+        component: Account,
+        meta: {
+            requiresAuth: true,
         }
     },
     {
@@ -88,7 +105,6 @@ router.beforeEach((to, from, next) => {
             return
         }
         next('/')
-        console.log('sadge')
     } else {
         next()
     }
@@ -118,13 +134,11 @@ router.beforeEach((to, from, next) => {
 
 router.beforeEach((to, from, next) => {
     store.dispatch('loader', true)
-    console.log(store)
     next()
 })
 router.afterEach(() => {
     setTimeout(() => {
         store.dispatch('loader', false)
-        console.log(store)
-    },100)
+    }, 100)
 })
 export default router

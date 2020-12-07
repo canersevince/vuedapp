@@ -25,6 +25,8 @@ export async function initContract() {
             "get_recent_tokens",
             "get_owned_token_ids",
             "get_token_details",
+            "token_supply",
+            "get_tokens_by_page",
             "withdraw",
             "get_price",
             "get_sales",
@@ -34,7 +36,8 @@ export async function initContract() {
             "get_collections_by_account_id",
             "total_collections",
             "get_all_minters",
-            "get_minter"
+            "get_minter",
+            "get_account_details"
         ],
         // Change methods can modify the state. But you don't receive the returned value when called.
         changeMethods: [
@@ -44,7 +47,8 @@ export async function initContract() {
             "put_token_to_sale", "cancel_sale", "buy",
             "create_collection",
             "burn_collection",
-            "add_minter"
+            "add_minter",
+            "update_account_details"
         ],
     })
 }

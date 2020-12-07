@@ -9,6 +9,7 @@ import {
 } from "near-sdk-as";
 
 import {Collection, collections, Token, TokenId, tokens, Trait} from './model'
+import {AccountDetails, AccountDetail} from "./user";
 
 
 /**************************/
@@ -528,6 +529,27 @@ export function get_recent_tokens(): DTOArray {
     return result
 }
 
+export function get_tokens_by_page(perPage: u32, page: u32): DTOArray {
+    let startIndex = tokens.length - (page * perPage)
+    let endIndex = tokens.length - ((page * perPage) - perPage);
+    const results = new Array<DTO>();
+    let idx = 0;
+    for (let i = endIndex; i > startIndex; i--) {
+        const token = tokens.get(i)
+        if (token) {
+            results[idx] = new DTO(token, i)
+            idx++
+        } else {
+            startIndex--
+        }
+    }
+    return results
+}
+
+export function token_supply(): u32 {
+    return tokens.length
+}
+
 export function buy(token_id: TokenId): void {
     const buyer = context.predecessor;
     const price: TokenPrice = tokenPrices.getSome(token_id);
@@ -549,9 +571,11 @@ export function buy(token_id: TokenId): void {
     tokenPrices.delete(token_id)
 }
 
+
 // COLLECTION FUNCTIONS
 export function create_collection(collection_name: CollectionName, description: string, image_url: string, external_url: string): void {
     const currentCollectionId = storage.getPrimitive<u32>(TOTAL_COLLECTIONS, 1)
+    assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO CREATE COLLECTIONS.")
     const newCollection = new Collection(collection_name, description, context.predecessor, external_url, image_url, [])
     const hasCollection = accountToCollection.get(context.predecessor)
     if (hasCollection) {
@@ -599,16 +623,18 @@ export function get_collection_by_id(collection_id: CollectionId): Collection {
 }
 
 export function get_collections(perPage: u32, page: u32): CollectionDTO[] {
-    const startIndex = (page * perPage) - perPage;
-    const endIndex = page * perPage
+    let startIndex = tokens.length - (page * perPage)
+    let endIndex = tokens.length - ((page * perPage) - perPage);
     const results = new Array<CollectionDTO>();
     let idx = 0
-    for (let i = startIndex; i < endIndex; i++) {
+    for (let i = endIndex; i > startIndex; i--) {
         const coll = collections.get(i)
         if (coll) {
             coll.tokens = []
             results[idx] = new CollectionDTO(i, coll)
             idx++
+        } else {
+            startIndex--
         }
     }
     return results
@@ -616,4 +642,23 @@ export function get_collections(perPage: u32, page: u32): CollectionDTO[] {
 
 export function total_collections(): u32 {
     return collections.length
+}
+
+
+// AccountDetails Functions
+
+
+export function update_account_details(pp: string, website: string, description: string, instagram: string, twitter: string): void {
+    assert(context.attachedDeposit > u128.from("0.1"), "STORAGE IS NOT PAID")
+    assert(description.length <= 60)
+    assert(website.length <= 30)
+    assert(twitter.length <= 25)
+    assert(instagram.length <= 25)
+    const user = context.predecessor
+    const newDetails = new AccountDetail(pp, website, description, twitter, instagram)
+    AccountDetails.set(user, newDetails)
+}
+
+export function get_account_details(accountId: AccountId): AccountDetail {
+    return AccountDetails.getSome(accountId)
 }

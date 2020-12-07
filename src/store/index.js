@@ -21,11 +21,9 @@ const store = new Vuex.Store({
             state.createStep--
         },
         showLoader(state) {
-            console.log('showing loader')
             state.isLoading = true
         },
         hideLoader(state) {
-            console.log('hiding loader.')
             state.isLoading = false
         },
         resetStep(state){

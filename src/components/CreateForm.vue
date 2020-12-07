@@ -13,7 +13,7 @@
                 id="grid-name" type="text" placeholder="My Precious...">
             <p class="text-red-500 text-xs italic">Please fill out this field.</p>
           </div>
-          <div class="w-full md:w-1/2 px-3">
+          <div class="w-full md:w-1/2 px-3 hidden">
             <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-amount">
               Amount
             </label>
@@ -55,7 +55,7 @@
                   id="grid-bg"
                   class="picker appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-1 px-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                   :style="{'background-color': token.background_color}"
-                  :picker="'wheel'" :model="'rgb'"
+                  :picker="'wheel'" :model="'hex'"
                   v-model="token.background_color"/>
             </div>
             <p class="text-xs w-full italic text-yellow-700">This will be used as background/border color.</p>
@@ -84,8 +84,11 @@
           <div class="w-full h-100 px-3">
             <ul class="w-full flex gap-1 pt-6 items-center justify-start">
               <li class="py-1 px-2 radius-sm shadow-sm text-left bg-gray-200 text-gray-600" :key="trait.key"
-                  v-for="trait in token.traits">
-                {{ trait.key }} : {{ trait.value }}
+                  v-for="(trait,idx) in token.traits">
+                <span class="font-bold">{{ trait.key }} </span>
+                <span class="text-custom-red">:</span> <span
+                  class="font-bold">{{ trait.value }}</span>
+                <span @click="removeTrait(idx)"><i class="fa fa-times text-custom-red cursor-pointer"></i></span>
               </li>
             </ul>
           </div>
@@ -229,13 +232,10 @@ import 'verte/dist/verte.css';
 import Genres from "@/helpers/genres.json";
 import axios from "axios";
 import {utils} from 'near-api-js'
+import {toBase64} from '@/helpers/toBaseUrl'
+import uploader from "@/helpers/uploader";
+import {constants} from "@/helpers/constants";
 
-const toBase64 = file => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.readAsDataURL(file);
-  reader.onload = () => resolve(reader.result);
-  reader.onerror = error => reject(error);
-});
 export default {
   name: "CreateForm",
   components: {
@@ -271,25 +271,16 @@ export default {
     }
   },
   methods: {
+    removeTrait(i) {
+      this.token.traits.splice(i, 1)
+    },
     async pickImageFile(e) {
       const file = e.target.files[0]
       const data = await toBase64(file)
       this.imageFilePreview = data
       this.imageFile = file
     },
-    uploadFile(file) {
-      const formData = new FormData()
-      formData.append('file', file)
-      axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
-      axios.defaults.headers['x-requested-with'] = 'localhost:8080'
-      return axios.post('http://nearfolio-uploader.herokuapp.com/upload', formData,
-          {
-            headers: {
-              'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json',
-              'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-            }
-          })
-    },
+    uploader: uploader,
     addNewTrait() {
       if (this.new_trait_name.length == 0 || this.new_trait_value.length == 0) return;
       const newTrait = {
@@ -373,7 +364,8 @@ export default {
         price: await utils.format.parseNearAmount(this.token.price)
       }
       if (this.token.amount > 1) {
-        const formatted = await utils.format.parseNearAmount(this.token.amount.toString(),)
+        const fee = constants.account_update_fee * this.token.amount;
+        const formatted = await utils.format.parseNearAmount(fee.toString(),)
         window.contract.batch_mint_payment({
           name: token.name,
           description: token.description,
@@ -387,12 +379,12 @@ export default {
           on_sale: token.on_sale ? '1' : null,
           price: token.price,
           amount: parseInt(this.token.amount)
-        }, 300000000000000, formatted)
+        }, constants.gas, formatted)
             .then((response) => {
               console.log(response)
             }).catch((error) => console.log(error))
       } else {
-        const formatted = await utils.format.parseNearAmount("1")
+        const formatted = await utils.format.parseNearAmount(constants.mint_fee.toString())
         window.contract.mint_payment({
           name: token.name,
           description: token.description,
@@ -405,7 +397,7 @@ export default {
           collection_id: token.collection_id,
           on_sale: token.on_sale ? '1' : null,
           price: token.price
-        }, 300000000000000, formatted)
+        }, constants.gas, formatted)
             .then((response) => {
               console.log(response)
             }).catch((error) => console.log(error))

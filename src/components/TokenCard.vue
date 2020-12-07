@@ -10,7 +10,8 @@
           {{ tokenObj.name }}
         </router-link>
       </h1>
-      <router-link tag="a" :to="'/collection/'+tokenObj.collection_id" v-if="collection"
+      <router-link tag="a" :to="'/collection/'+tokenObj.collection_id"
+                   v-if="collection"
                    class="hover:text-red-700 text-xs font-bold"
                    style="min-height: 16px">
         {{ collection.name }}
@@ -24,18 +25,20 @@
       </div>
     </header>
     <footer class="flex items-center justify-between leading-none p-1 md:p-2">
-      <a class="flex items-center no-underline hover:underline text-black" href="#">
+      <router-link tag="a" :to="`/profile/${tokenObj.creator}`"
+                   class="flex items-center no-underline hover:underline text-black" href="#">
         <img alt="Placeholder" class="block rounded-full" src="https://picsum.photos/32/32/?random">
         <p class="ml-2 text-sm">
           {{ tokenObj.creator }}
         </p>
-      </a>
-      <a class="no-underline flex block ml-6 items-center ml-auto justify-between text-grey-darker hover:text-red-dark"
-         href="#">
-        <span class="block w-full text-sm" v-if="!fetch_price && price" @click="remove_from_sale">{{
+      </router-link>
+      <router-link tag="a" :to="`/token/${id}`"
+                   class="no-underline flex block ml-6 items-center ml-auto justify-between text-grey-darker hover:text-red-dark"
+                   href="#">
+        <span class="flex text-sm" v-if="!fetch_price && price" @click="remove_from_sale">{{
             price
           }} <strong>Ⓝ</strong></span>
-        <span v-if="fetch_price && fetchedPrice" class="block w-full text-sm w-full" @click="remove_from_sale">
+        <span v-if="fetch_price && fetchedPrice" class="flex text-sm" @click="remove_from_sale">
           {{
             fetchedPrice
           }} <strong>Ⓝ</strong></span>
@@ -43,7 +46,7 @@
         <button class="px-3 py-2 text-white rounded-md shadow-md custom-red" v-if="!price && is_owner === true">
           Sell
         </button>
-      </a>
+      </router-link>
     </footer>
 
   </div>
