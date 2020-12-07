@@ -6,7 +6,6 @@ import {
     PersistentUnorderedMap,
     storage,
     u128,
-    PersistentVector
 } from "near-sdk-as";
 
 import {Collection, collections, Token, TokenId, tokens, Trait} from './model'
@@ -331,7 +330,7 @@ function mint_token(
 
         }
     }
-    if (collection_id > 0) {
+    if (collection_id && collection_id > 0) {
         const targetCollection = collections.getSome(collection_id)
         if (targetCollection.owner == context.predecessor) {
             targetCollection.tokens.push(currentID)
@@ -360,7 +359,7 @@ export function mint_payment(name: string,
                              on_sale: string,
                              price: string): void {
     const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
-    assert(allowedMinters.get(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
+    assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
     const creator = context.predecessor
     mint_token(name,
@@ -388,9 +387,8 @@ export function batch_mint_payment(name: string,
                                    on_sale: string,
                                    price: string,
                                    amount: i32): void {
-
-    const contract_owner = storage.getPrimitive(CONTRACT_OWNER, 'seadox3.testnet')
-    assert(allowedMinters.get(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
+    const contract_owner = storage.getPrimitive<string>(CONTRACT_OWNER, 'seadox3.testnet')
+    assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
     const creator = context.predecessor
     for (let i = 0; i < amount; i++) {

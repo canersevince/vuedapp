@@ -35,6 +35,9 @@ const store = new Vuex.Store({
     getters: {
         getStep(state) {
             return state.createStep
+        },
+        getLoading(state){
+            return state.isLoading
         }
     },
     modules: {

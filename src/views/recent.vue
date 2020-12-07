@@ -9,7 +9,7 @@
       <div class="grid grid-cols-12">
         <div class="col-span-12 gap-1 px-3">
           <div class="grid grid-cols-12 gap-4">
-            <div v-for="tokenObject in recentTokens" :key="tokenObject.id" class="col-span-6 md:col-span-4 w-full">
+            <div v-for="tokenObject in recentTokens" :key="tokenObject.id" class="col-span-12 md:col-span-4 w-full">
               <TokenCard :fetch_price="true" :is_owner="false" :id="tokenObject.id" :token="tokenObject.token"/>
               <p v-if="recentTokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
             </div>

@@ -54,7 +54,8 @@
               <verte
                   id="grid-bg"
                   class="picker appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-1 px-2 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  :style="{'background-color': token.background_color}" picker="square" model="rgb"
+                  :style="{'background-color': token.background_color}"
+                  :picker="'wheel'" :model="'rgb'"
                   v-model="token.background_color"/>
             </div>
             <p class="text-xs w-full italic text-yellow-700">This will be used as background/border color.</p>
@@ -178,28 +179,45 @@
         </div>
       </form>
     </div>
-    <div class="mx-auto flex-col flex items-center justify-content-center is-full">
-      <div class="">
-        Some upload form.
-      </div>
-      <div class="is-full">
-        <button
-            v-if="$store.state.createStep > 1"
-            @click="prevStep"
-            class="shadow-md hover:text-purple-500 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 text-gray-600">
-          <i class="fa fa-chevron-left mr-1"></i>Previous
+    <div v-show="step==2" class="mx-auto flex-col flex items-center justify-content-center is-full">
+      <!-- component -->
+      <div class="overflow-hidden relative w-64 mt-4 mb-4">
+        <button @click="$refs.imageFile.click()"
+                class="custom-red hover:bg-indigo-dark text-white font-bold py-2 px-4 w-full inline-flex items-center">
+          <svg fill="#FFF" height="18" viewBox="0 0 24 24" width="18" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 0h24v24H0z" fill="none"/>
+            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+          </svg>
+          <span class="ml-2">Select NFT Visual</span>
+          <p class="text-xs text-gray-100">
+            (Max. 9mb)
+          </p>
         </button>
-        <button
-            v-if="$store.state.createStep == 2"
-            @click="mintToken"
-            class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
-          Mint<i class="fa fa-chevron-right ml-1"></i></button>
-        <button
-            v-if="$store.state.createStep <2"
-            @click="nextStep"
-            class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
-          Next<i class="fa fa-chevron-right ml-1"></i></button>
+        <input :ref="'imageFile'" class="cursor-pointer absolute block opacity-0 pin-r pin-t" type="file"
+               name="vacancyImageFiles"
+               @change="pickImageFile"
+               multiple>
       </div>
+      <img :src="imageFilePreview" v-if="imageFilePreview" width="300" class="m-2 mb-5">
+
+    </div>
+    <div class="is-full container flex items-center justify-center mx-auto">
+      <button
+          v-if="$store.state.createStep > 1"
+          @click="prevStep"
+          class="shadow-md hover:text-purple-500 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 text-gray-600">
+        <i class="fa fa-chevron-left mr-1"></i>Previous
+      </button>
+      <button
+          v-if="$store.state.createStep == 2"
+          @click="mintToken"
+          class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
+        Mint<i class="fa fa-chevron-right ml-1"></i></button>
+      <button
+          v-if="$store.state.createStep <2"
+          @click="nextStep"
+          class="shadow-md hover:text-red-700 transition duration-200 hover:scale-110 transform border border-purple-100 px-5 py-2 ml-2 text-gray-600">
+        Next<i class="fa fa-chevron-right ml-1"></i></button>
     </div>
   </div>
 </template>
@@ -212,6 +230,12 @@ import Genres from "@/helpers/genres.json";
 import axios from "axios";
 import {utils} from 'near-api-js'
 
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
+});
 export default {
   name: "CreateForm",
   components: {
@@ -222,7 +246,7 @@ export default {
       token: {
         name: "",
         description: "",
-        background_color: "",
+        background_color: "#ff0000",
         amount: 1,
         genre: null,
         external_link: "",
@@ -235,7 +259,10 @@ export default {
       is_audio: false,
       genres: null,
       is_collection: false,
-      collections: []
+      collections: [],
+      imageFile: null,
+      mediaFile: null,
+      imageFilePreview: null
     }
   },
   computed: {
@@ -244,6 +271,25 @@ export default {
     }
   },
   methods: {
+    async pickImageFile(e) {
+      const file = e.target.files[0]
+      const data = await toBase64(file)
+      this.imageFilePreview = data
+      this.imageFile = file
+    },
+    uploadFile(file) {
+      const formData = new FormData()
+      formData.append('file', file)
+      axios.defaults.headers['Access-Control-Allow-Origin'] = '*'
+      axios.defaults.headers['x-requested-with'] = 'localhost:8080'
+      return axios.post('http://nearfolio-uploader.herokuapp.com/upload', formData,
+          {
+            headers: {
+              'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json',
+              'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
+            }
+          })
+    },
     addNewTrait() {
       if (this.new_trait_name.length == 0 || this.new_trait_value.length == 0) return;
       const newTrait = {
@@ -287,14 +333,36 @@ export default {
           title: "Warning!",
           text: "Please fill the all required fields. A token must have a valid name, description and collection name if it is part of a collection",
           icon: "warning",
-          closable: true
         })
         return
       }
+      if (!this.imageFile) {
+        Swal.fire({
+          title: "Warning!",
+          text: "Please select at least the image file.",
+          icon: "warning",
+        })
+        return
+      }
+
+      const {data: ImageLink} = await this.uploadFile(this.imageFile)
+
+
+      if (!ImageLink) {
+        Swal.fire({
+          title: "ERror!",
+          text: "There was an error while upload. Please try again..",
+          icon: "error",
+        })
+        return
+      }
+      console.log(ImageLink)
+
+
       const token = {
         name: this.token.name,
         description: this.token.description,
-        image_url: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+        image_url: ImageLink,
         background_color: this.token.background_color,
         genre: this.token.genre,
         file: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
@@ -353,23 +421,13 @@ export default {
       return 0
     })
     const link = `https://cors-anywhere.herokuapp.com/https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?slug=NEAR`
-    axios.get(link, {
-      headers: {
-        'X-CMC_PRO_API_KEY': this.$store.state.cmcApi,
-        'Access-Control-Allow-Origin': '*'
-      }
-    }).then(({data}) => {
-      console.log(data)
-    }).catch((error) => console.log(error))
   },
   mounted() {
     window.contract.get_collections_by_account_id({account_id: window.accountId}).then(res => {
       console.log(res)
-      console.log(res)
-      console.log(res)
-      console.log(res)
       this.collections = res
     }).catch((error) => console.log(error))
+    this.$store.commit('showLoader')
   },
   beforeDestroy() {
     this.$store.commit('resetStep')

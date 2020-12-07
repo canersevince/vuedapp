@@ -117,14 +117,14 @@ router.beforeEach((to, from, next) => {
 })
 
 router.beforeEach((to, from, next) => {
-    store.commit('showLoader')
+    store.dispatch('loader', true)
+    console.log(store)
     next()
 })
 router.afterEach(() => {
     setTimeout(() => {
-        store.commit('hideLoader')
-    }, 500)
+        store.dispatch('loader', false)
+        console.log(store)
+    },100)
 })
-
-
 export default router

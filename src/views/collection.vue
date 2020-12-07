@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto max-w-full">
     <div class="bg-gray-100 container md:mx-auto py-8 max-w-full">
-      <h1 class="font-major lowercase my-4 items-center justify-center text-5xl font-bold leading-tight text-center">
+      <h1 class="font-major lowercase my-4 text-gray-700 items-center justify-center text-5xl font-bold leading-tight text-center">
         MY COLLECTION </h1>
     </div>
     <div class="flex items-center justify-center">

@@ -94,7 +94,6 @@ export default {
         this.fetch_price$()
       }
     }
-    console.log(this.$props)
   }
 }
 </script>

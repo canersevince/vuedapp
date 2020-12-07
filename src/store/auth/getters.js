@@ -8,9 +8,6 @@ export const getters = {
     getAdmin(state) {
         return state.admin
     },
-    getLoading(state) {
-        return state.isLoading
-    },
     getMinter(state) {
         return state.minter
     }

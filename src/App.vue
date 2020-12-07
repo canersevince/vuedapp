@@ -24,7 +24,7 @@ export default {
     isSignedIn() {
       return window.walletConnection.isSignedIn()
     },
-    isLoading(){
+    isLoading() {
       return this.$store.getters.getLoading
     }
   },
@@ -153,7 +153,8 @@ export default {
   background-color: #782634 !important;
   z-index: 9999;
 }
-.custom-red{
+
+.custom-red {
   background-color: #782634 !important;
 }
 </style>
