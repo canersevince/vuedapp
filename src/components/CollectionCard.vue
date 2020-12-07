@@ -22,9 +22,9 @@
     <footer class="flex items-center justify-between leading-none p-1 md:p-2">
       <a class="flex items-center no-underline hover:underline text-black" href="#">
         <img alt="Placeholder" class="block rounded-full" src="https://picsum.photos/32/32/?random">
-        <p class="ml-2 text-sm">
+        <router-link tag="a" class="ml-2 text-sm text-gray-900" :to="'/profile/'+collection.owner">
           {{ collection.owner }}
-        </p>
+        </router-link>
       </a>
     </footer>
 
