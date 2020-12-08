@@ -37,7 +37,8 @@ export async function initContract() {
             "total_collections",
             "get_all_minters",
             "get_minter",
-            "get_account_details"
+            "get_account_details",
+            "get_user_profile_picture"
         ],
         // Change methods can modify the state. But you don't receive the returned value when called.
         changeMethods: [

@@ -5,7 +5,7 @@
     </router-link>
 
     <header class="flex flex-col items-start justify-between leading-tight p-1 md:p-2">
-      <h1 class="text-lg">
+      <h1 class="text-lg mt-3">
         <router-link :to="`/tokens/${id}`" tag="a" class="no-underline hover:underline text-black text-md" href="#">
           {{ tokenObj.name }}
         </router-link>
@@ -17,9 +17,9 @@
         {{ collection.name }}
       </router-link>
       <div v-else style="min-height:16px"/>
-      <div class="w-full flex justify-between items-center">
-        <p class="text-sm my-1">{{ tokenObj.description }}</p>
-        <p class="text-grey-darker text-xs ml-auto">
+      <div class="w-full flex justify-between items-center" style="min-height:32px">
+        <p class="text-sm my-1" style="min-height:32px">{{ tokenObj.description }}</p>
+        <p class="text-grey-darker text-xs ml-auto" style="min-height:32px">
           14/4/20
         </p>
       </div>
@@ -27,7 +27,8 @@
     <footer class="flex items-center justify-between leading-none p-1 md:p-2">
       <router-link tag="a" :to="`/profile/${tokenObj.creator}`"
                    class="flex items-center no-underline hover:underline text-black" href="#">
-        <img alt="Placeholder" class="block rounded-full" src="https://picsum.photos/32/32/?random">
+        <img width="32" alt="Placeholder" class="block rounded-full"
+             :src="user_picture && user_picture.length> 0 ? user_picture : 'https://picsum.photos/32/32/?random'">
         <p class="ml-2 text-sm">
           {{ tokenObj.creator }}
         </p>
@@ -68,7 +69,8 @@ export default {
     return {
       collection: null,
       tokenObj: null,
-      fetchedPrice: null
+      fetchedPrice: null,
+      user_picture: null
     }
   },
   methods: {
@@ -96,6 +98,11 @@ export default {
       if (this.fetch_price) {
         this.fetch_price$()
       }
+    }
+    try {
+      this.user_picture = await window.contract.get_user_profile_picture({accountId: this.tokenObj.creator})
+    } catch (e) {
+      console.log(e)
     }
   }
 }

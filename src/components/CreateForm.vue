@@ -13,15 +13,17 @@
                 id="grid-name" type="text" placeholder="My Precious...">
             <p class="text-red-500 text-xs italic">Please fill out this field.</p>
           </div>
-          <div class="w-full md:w-1/2 px-3 hidden">
+          <div class="w-full md:w-1/2 px-3">
             <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-amount">
               Amount
             </label>
             <input
                 v-model="token.amount"
-                class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                class="block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4
+                leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
                 id="grid-amount" type="number" step="1"
-                min="1" max="20" placeholder="How many tokens?">
+                min="1" max="20"
+                placeholder="How many tokens?">
           </div>
         </div>
         <div class="flex flex-wrap -mx-3 mb-6">
@@ -230,10 +232,9 @@ import Swal from 'sweetalert2'
 import verte from 'verte'
 import 'verte/dist/verte.css';
 import Genres from "@/helpers/genres.json";
-import axios from "axios";
 import {utils} from 'near-api-js'
 import {toBase64} from '@/helpers/toBaseUrl'
-import uploader from "@/helpers/uploader";
+import {uploadFile} from "@/helpers/uploader";
 import {constants} from "@/helpers/constants";
 
 export default {
@@ -280,7 +281,6 @@ export default {
       this.imageFilePreview = data
       this.imageFile = file
     },
-    uploader: uploader,
     addNewTrait() {
       if (this.new_trait_name.length == 0 || this.new_trait_value.length == 0) return;
       const newTrait = {
@@ -319,6 +319,23 @@ export default {
       return !(this.token.name.length === 0 || this.token.description.length === 0);
     },
     async mintToken() {
+      if(!this.token.price || this.token.price < 1){
+        Swal.fire({
+          title: "Warning!",
+          text: "Price cannot be zero.",
+          icon: "warning",
+        })
+        return
+      }
+      console.log(this.token)
+      if(this.token.amount < 1 || this.token.amount > 20){
+        Swal.fire({
+          title: "Warning!",
+          text: "You can mint maximum 20 tokens.",
+          icon: "warning",
+        })
+        return
+      }
       if (!this.validate()) {
         Swal.fire({
           title: "Warning!",
@@ -336,7 +353,7 @@ export default {
         return
       }
 
-      const {data: ImageLink} = await this.uploadFile(this.imageFile)
+      const {data: ImageLink} = await uploadFile(this.imageFile)
 
 
       if (!ImageLink) {
@@ -418,8 +435,9 @@ export default {
     window.contract.get_collections_by_account_id({account_id: window.accountId}).then(res => {
       console.log(res)
       this.collections = res
+      this.$store.dispatch('loader', false)
     }).catch((error) => console.log(error))
-    this.$store.commit('showLoader')
+    this.$store.dispatch('loader', true)
   },
   beforeDestroy() {
     this.$store.commit('resetStep')

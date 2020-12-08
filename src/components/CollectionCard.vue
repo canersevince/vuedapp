@@ -21,7 +21,7 @@
 
     <footer class="flex items-center justify-between leading-none p-1 md:p-2">
       <a class="flex items-center no-underline hover:underline text-black" href="#">
-        <img alt="Placeholder" class="block rounded-full" src="https://picsum.photos/32/32/?random">
+        <img width="32" alt="Placeholder" class="block rounded-full" :src="user_picture && user_picture.length> 0 ? user_picture : 'https://picsum.photos/32/32/?random'">
         <router-link tag="a" class="ml-2 text-sm text-gray-900" :to="'/profile/'+collection.owner">
           {{ collection.owner }}
         </router-link>
@@ -37,6 +37,16 @@ export default {
   props: {
     collection: Object,
     id: Number
+  },
+  data(){return{
+    user_picture: null
+  }},
+  async created() {
+    try {
+      this.user_picture = await window.contract.get_user_profile_picture({accountId: this.collection.owner})
+    } catch (e){
+      console.log(e)
+    }
   }
 }
 </script>

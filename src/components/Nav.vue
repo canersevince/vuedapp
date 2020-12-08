@@ -129,7 +129,10 @@
                 role="menu" aria-orientation="vertical" aria-labelledby="user-menu">
               <UserInfoContainer :mobile="true" @click="toggleUser"></UserInfoContainer>
 
-              <router-link to="/account" href="#" exact-active-class="bg-gray-400"
+              <router-link :to="'/profile/'+accountId" href="#" exact-active-class="bg-gray-400"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
+                           role="menuitem">Profile
+              </router-link><router-link to="/account" href="#" exact-active-class="bg-gray-400"
                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
                            role="menuitem">Account
               </router-link>

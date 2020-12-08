@@ -61,6 +61,8 @@
 </template>
 
 <script>
+import uploadFile from "@/helpers/uploader";
+import Swal from 'sweetalert2'
 export default {
   name: "collection_creation",
   data() {
@@ -85,10 +87,21 @@ export default {
       e.preventDefault()
       console.log(e)
     },
-    createCollection() {
-      const {collection_name, description, image_url, external_url} = this.collection
-      window.contract.create_collection({collection_name, description, image_url, external_url}).then(response => {
+    async createCollection() {
+
+      if(!this.collectionImage){
+        Swal.fire({
+          title: "File is not selected.",
+          icon: "warning"
+        })
+        return
+      }
+      const {data: fileUrl} = await uploadFile()
+
+      const {collection_name, description, external_url} = this.collection
+      window.contract.create_collection({collection_name, description, image_url:fileUrl, external_url}).then(response => {
         console.log(response)
+        this.$router.push('/browse-collections')
       }).catch(error => console.error(error))
     },
     fileSelected(e) {

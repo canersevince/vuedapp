@@ -391,20 +391,45 @@ export function batch_mint_payment(name: string,
     const contract_owner = storage.getPrimitive<string>(CONTRACT_OWNER, 'seadox3.testnet')
     assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
-    const creator = context.predecessor
+    const new_token: Token = new Token(
+        name,
+        description,
+        image_url,
+        background_color,
+        genre,
+        context.predecessor,
+        file,
+        external_link,
+        traits,
+        collection_id,
+    );
+    let balance: TokenIdArray | null = getTokensOfAccountId.get(context.predecessor)
+    if (!balance) {
+        balance = new Array<TokenId>();
+    }
+    const targetCollection = collections.getSome(collection_id)
+    assert(targetCollection.owner == context.predecessor, "YOU CANNOT MINT ON THIS COLLECTION")
     for (let i = 0; i < amount; i++) {
-        mint_token(name,
-            description,
-            image_url,
-            background_color,
-            genre,
-            creator,
-            file,
-            external_link,
-            traits,
-            collection_id,
-            on_sale,
-            price)
+        const currentID = storage.getPrimitive<u32>(TOTAL_SUPPLY, 0)
+        balance.push(currentID)
+        tokens.set(currentID, new_token)
+        tokenToOwner.set(currentID, context.predecessor)
+        getTokensOfAccountId.set(context.predecessor, balance)
+        if (on_sale == '1') {
+            put_token_to_sale(currentID, price)
+            const genreSales = salesByGenre.getSome(genre)
+            genreSales.push(currentID);
+        }
+        if (collection_id && collection_id > 0) {
+            targetCollection.tokens.push(currentID)
+            collections.set(collection_id, targetCollection)
+            logging.log('COLLECTION ID' + collection_id.toString())
+        } else {
+            const targetDefaultCollection = collections.getSome(0)
+            targetDefaultCollection.tokens.push(currentID)
+            collections.set(collection_id, targetDefaultCollection)
+        }
+        storage.set(TOTAL_SUPPLY, currentID + 1)
     }
 }
 
@@ -661,4 +686,9 @@ export function update_account_details(pp: string, website: string, description:
 
 export function get_account_details(accountId: AccountId): AccountDetail {
     return AccountDetails.getSome(accountId)
+}
+
+export function get_user_profile_picture(accountId: AccountId): string {
+    const user = AccountDetails.getSome(accountId)
+    return user.pp
 }

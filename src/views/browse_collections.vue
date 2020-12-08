@@ -131,6 +131,7 @@ export default {
       }
     },
     changePage(i) {
+      console.log({i})
       this.currentPage = i
     }
   },

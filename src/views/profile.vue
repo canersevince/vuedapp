@@ -50,7 +50,7 @@
           <div class="grid grid-cols-12 gap-2">
             <div
                 v-for="tokenObject in tokens.slice(0, tokens.length>= 8 ? tokenMax : tokens.length)"
-                :key="tokenObject.id" class="col-span-6 md:col-span-4">
+                :key="tokenObject.id" class="col-span-12 md:col-span-4">
               <TokenCard :price="tokenObject.price" :fetch_price="true" :is_owner="false" :id="tokenObject.id"
                          :token="tokenObject.token"/>
               <p v-if="tokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
@@ -66,7 +66,7 @@
           </div>
           <div @click="loadMoreTokens"
                v-if="this.tokenMax <= this.tokens.length"
-               class="cursor-pointer mx-auto col-span-12 mb-5 text-gray-700 text-center text-xl font-bold">
+               class="cursor-pointer mx-auto col-span-12 mt-8 text-gray-700 text-center text-xl font-bold">
             Load More<i class="fa fa-plus text-gray-900 text-custom-red p-3"></i>
           </div>
         </div>
@@ -95,6 +95,7 @@
 <script>
 import TokenCard from "@/components/TokenCard";
 import CollectionCard from '@/components/CollectionCard'
+
 export default {
   name: "profile",
   components: {TokenCard, CollectionCard},
