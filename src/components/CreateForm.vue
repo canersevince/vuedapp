@@ -271,6 +271,19 @@ export default {
       return this.$store.getters.getStep
     }
   },
+  watch: {
+    is_collection(val) {
+      if (val === true) {
+        if(this.token.amount > 1){
+          Swal.fire({
+            title: "Warning",
+            description: "Collection NFT's cannot batch minted."
+          })
+          this.token.amount = 1
+        }
+      }
+    }
+  },
   methods: {
     removeTrait(i) {
       this.token.traits.splice(i, 1)
@@ -319,7 +332,7 @@ export default {
       return !(this.token.name.length === 0 || this.token.description.length === 0);
     },
     async mintToken() {
-      if(!this.token.price || this.token.price < 1){
+      if (!this.token.price || this.token.price < 1) {
         Swal.fire({
           title: "Warning!",
           text: "Price cannot be zero.",
@@ -328,10 +341,10 @@ export default {
         return
       }
       console.log(this.token)
-      if(this.token.amount < 1 || this.token.amount > 20){
+      if (this.token.amount < 1 || this.token.amount > 10) {
         Swal.fire({
           title: "Warning!",
-          text: "You can mint maximum 20 tokens.",
+          text: "You can mint maximum 10 tokens.",
           icon: "warning",
         })
         return
