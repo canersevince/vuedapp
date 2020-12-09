@@ -27,7 +27,6 @@ export async function initContract() {
             "get_token_details",
             "token_supply",
             "get_tokens_by_page",
-            "withdraw",
             "get_price",
             "get_sales",
             "get_contract_owner",

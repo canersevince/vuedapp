@@ -25,6 +25,13 @@
       <div style="z-index : -1;"
            class="overlay bg-gray-800 opacity-75 top-0 left-0 pointer-events-none z-10 absolute w-full h-full"></div>
     </div>
+    <div v-else class="bg-gray-900 relative container md:mx-auto py-4 max-w-full">
+      <h1 class="z-100 lowercase text-white my-4 items-center justify-center text-3xl font-bold leading-tight text-center">
+        {{ id }} </h1>
+      <p class="text-xs text-gray-200 mx-auto text-center">
+        this is all we know about {{ id }}
+      </p>
+    </div>
     <div class="container mx-auto">
       <div class="bg-white text-center">
         <nav class="flex sm:flex-row mx-auto items-center justify-center">
@@ -47,10 +54,10 @@
     <div class="container mx-auto py-6" v-if="activeTab === 'token'">
       <div class="grid grid-cols-12">
         <div class="col-span-12 py-4 gap-1 px-5">
-          <div class="grid grid-cols-12 gap-2">
+          <div class="grid grid-cols-12 gap-4">
             <div
                 v-for="tokenObject in tokens.slice(0, tokens.length>= 8 ? tokenMax : tokens.length)"
-                :key="tokenObject.id" class="col-span-12 md:col-span-4">
+                :key="tokenObject.id" class="col-span-12 mt-2 md:col-span-4">
               <TokenCard :price="tokenObject.price" :fetch_price="true" :is_owner="false" :id="tokenObject.id"
                          :token="tokenObject.token"/>
               <p v-if="tokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
@@ -95,6 +102,8 @@
 <script>
 import TokenCard from "@/components/TokenCard";
 import CollectionCard from '@/components/CollectionCard'
+import axios from "axios";
+import {constants} from "@/helpers/constants";
 
 export default {
   name: "profile",
@@ -131,10 +140,24 @@ export default {
       return this.$router.push('/404')
     }
     try {
-      this.account = await window.contract.get_account_details({accountId: this.id})
-      this.tokens = await window.contract.get_tokens({accountId: this.id})
-      this.collections = await window.contract.get_collections_by_account_id({account_id: this.id})
-      this.tokens = this.tokens.reverse()
+      const {data: Account} = await axios.get(`${constants.rpc_api}/accounts/get_account_details/${this.id}`)
+      if (typeof Account === "string" && Account.indexOf('Error') > -1) {
+        this.account = false
+      } else {
+        this.account = Account
+      }
+      const {data: Tokens} = await axios.get(`${constants.rpc_api}/tokens/get_tokens_of/${this.id}`)
+      if (typeof Tokens === "string") {
+        this.tokens = []
+      } else {
+        this.tokens = Tokens.reverse()
+      }
+      const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_account_id/${this.id}`)
+      if (typeof Collections === "string") {
+        this.collections = []
+      } else {
+        this.collections = Collections
+      }
       this.collections = this.collections.reverse()
       this.$store.dispatch('loader', false)
     } catch (e) {

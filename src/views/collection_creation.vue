@@ -12,7 +12,8 @@
                 v-model="collection.collection_name"
                 class="appearance-none block w-full bg-gray-200 text-gray-700 border border-red-500 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
                 id="grid-name" type="text" placeholder="My Precious...">
-            <p class="text-red-500 text-xs italic" v-if="collection.collection_name.length < 1">Please fill out this field.</p>
+            <p class="text-red-500 text-xs italic" v-if="collection.collection_name.length < 1">Please fill out this
+              field.</p>
           </div>
         </div>
         <div class="flex flex-wrap -mx-3 mb-6">
@@ -63,6 +64,7 @@
 <script>
 import uploadFile from "@/helpers/uploader";
 import Swal from 'sweetalert2'
+
 export default {
   name: "collection_creation",
   data() {
@@ -89,17 +91,21 @@ export default {
     },
     async createCollection() {
 
-      if(!this.collectionImage){
+      if (!this.collectionImage) {
         Swal.fire({
           title: "File is not selected.",
           icon: "warning"
         })
         return
       }
-      const {data: fileUrl} = await uploadFile()
-
+      const {data: fileUrl} = await uploadFile(this.collectionImage)
       const {collection_name, description, external_url} = this.collection
-      window.contract.create_collection({collection_name, description, image_url:fileUrl, external_url}).then(response => {
+      window.contract.create_collection({
+        collection_name,
+        description,
+        image_url: fileUrl,
+        external_url
+      }).then(response => {
         console.log(response)
         this.$router.push('/browse-collections')
       }).catch(error => console.error(error))

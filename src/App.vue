@@ -31,8 +31,16 @@ export default {
   methods: {
     async threeBox() {
       if (window.ethereum && window.ethereum.selectedAddress) {
+        const LSProfile = localStorage.getItem('3box')
+        if (LSProfile) {
+          await this.$store.dispatch('set3Box', JSON.parse(LSProfile))
+          return
+        }
         const profile = await Box.getProfile(window.ethereum.selectedAddress)
-        const box = await Box.openBox(window.ethereum.selectedAddress, window.ethereum)
+        /* const box = await Box.openBox(window.ethereum.selectedAddress, window.ethereum) */
+        if (profile) {
+          localStorage.setItem('3box', JSON.stringify(profile))
+        }
         await this.$store.dispatch('set3Box', profile)
       }
     }
@@ -158,7 +166,7 @@ export default {
   background-color: #782634 !important;
 }
 
-.text-custom-red{
+.text-custom-red {
   color: #782634 !important;
 }
 </style>

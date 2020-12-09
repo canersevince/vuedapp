@@ -1,11 +1,7 @@
 [
   {
-    "name": "Recent",
-    "to": "/recent"
-  },
-  {
     "name": "Marketplace",
-    "to": "/browse/recent/1"
+    "to": "/browse/recent"
   },
   {
     "name": "Collections",

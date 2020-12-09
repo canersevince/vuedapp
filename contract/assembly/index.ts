@@ -324,12 +324,6 @@ function mint_token(
     getTokensOfAccountId.set(creator, balance)
     if (on_sale == '1') {
         put_token_to_sale(currentID, price)
-        const genreSales = salesByGenre.get(genre)
-        if (genreSales) {
-            genreSales.push(currentID);
-        } else {
-
-        }
     }
     if (collection_id && collection_id > 0) {
         const targetCollection = collections.getSome(collection_id)
@@ -343,8 +337,6 @@ function mint_token(
         targetCollection.tokens.push(currentID)
         collections.set(collection_id, targetCollection)
     }
-
-
     storage.set(TOTAL_SUPPLY, currentID + 1)
 }
 
@@ -468,7 +460,7 @@ export function get_owned_token_ids(accountId: string): TokenId[] | null {
 export function get_tokens_by_collection(collectionId: CollectionId): DTO[] {
     const collectionObj = collections.getSome(collectionId)
     if (collectionObj) {
-        const result: DTO[] = new Array<DTO>(collectionObj.tokens.length)
+        const result: DTO[] = new Array<DTO>(/* collectionObj.tokens.length*/)
         for (let i = 0; i < collectionObj.tokens.length; i++) {
             const token = collectionObj.tokens[i];
             if (token) {
@@ -506,6 +498,15 @@ export function put_token_to_sale(token_id: TokenId, price: string): void {
 export function cancel_sale(token_id: TokenId): void {
     assert(tokenToOwner.get(token_id) == context.predecessor);
     tokenPrices.delete(token_id);
+    const token = tokens.getSome(token_id)
+    let salesOnGenre = salesByGenre.getSome(token.genre)
+    for (let i = 0; i < salesOnGenre.length; i++) {
+        if (salesOnGenre[i] === token_id) {
+            salesOnGenre.splice(i, 1)
+            salesByGenre.set(token.genre, salesOnGenre)
+            break
+        }
+    }
 }
 
 export function get_sales(account_id: AccountId): DTOArray | null {
@@ -555,8 +556,8 @@ export function get_recent_tokens(): DTOArray {
 }
 
 export function get_tokens_by_page(perPage: u32, page: u32): DTOArray {
-    let startIndex = tokens.length - (page * perPage)
-    let endIndex = tokens.length - ((page * perPage) - perPage);
+    let startIndex = tokens.length - (page * perPage) > 0 ? tokens.length - (page * perPage) : 0
+    let endIndex = tokens.length - ((page * perPage) - perPage) > 0 ? tokens.length - ((page * perPage) - perPage) : tokens.length;
     const results = new Array<DTO>();
     let idx = 0;
     for (let i = endIndex; i > startIndex; i--) {
@@ -648,18 +649,17 @@ export function get_collection_by_id(collection_id: CollectionId): Collection {
 }
 
 export function get_collections(perPage: u32, page: u32): CollectionDTO[] {
-    let startIndex = tokens.length - (page * perPage)
-    let endIndex = tokens.length - ((page * perPage) - perPage);
+    let startIndex = collections.length - (page * perPage) > 0 ? collections.length - (page * perPage) : 0
+    // 4
+    let endIndex = collections.length - ((page * perPage) - perPage) > 0 ? collections.length - ((page * perPage) - perPage) : collections.length
+    // 12
     const results = new Array<CollectionDTO>();
-    let idx = 0
-    for (let i = endIndex; i > startIndex; i--) {
+    let idx: u32 = 0;
+    for (let i = endIndex; i >= startIndex; i--) {
         const coll = collections.get(i)
         if (coll) {
-            coll.tokens = []
             results[idx] = new CollectionDTO(i, coll)
             idx++
-        } else {
-            startIndex--
         }
     }
     return results

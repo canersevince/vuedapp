@@ -79,6 +79,8 @@
 
 <script>
 import CollectionCard from "@/components/CollectionCard";
+import axios from "axios";
+import {constants} from "@/helpers/constants";
 
 export default {
   name: "browse_collections",
@@ -117,13 +119,13 @@ export default {
       const page = this.$route.params.page
       try {
         this.fetched = true
-        this.totalCollection = await window.contract.total_collections()
-        console.log(this.totalCollection)
+        const {data: TotalCollections} = await axios.get(`${constants.rpc_api}/collections/total_collections`)
+        this.totalCollection = TotalCollections
+        // const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_pages/${page ? parseInt(page) : 1}/${parseInt(this.perPage)}`)
         this.collections = await window.contract.get_collections({
-          perPage: this.perPage,
-          page: page ? parseInt(page) : 1
+          page: page ? parseInt(page) : 1,
+          perPage: this.perPage
         })
-        console.log(this.collections)
         this.showEmpty = this.collections.length === 0;
       } catch (err) {
         this.showEmpty = true
@@ -131,7 +133,6 @@ export default {
       }
     },
     changePage(i) {
-      console.log({i})
       this.currentPage = i
     }
   },

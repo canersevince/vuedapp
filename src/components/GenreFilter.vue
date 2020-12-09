@@ -14,6 +14,7 @@
         <router-link tag="a" :to="'/browse/'+genre">{{ genre }}</router-link>
       </li>
       <li
+          v-if="filterWord.length===0"
           class="py-2 px-3 transition-all duration-300 border-0 border-red-100 radius-lg font-light"
       >
         ...

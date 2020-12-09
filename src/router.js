@@ -5,7 +5,8 @@ import store from "@/store";
 // eslint-disable
 const Home = () => import(/* webpackChunkName: "home" */ '@/views/index.vue')
 const Profile = () => import(/* webpackChunkName: "browse" */ '@/views/profile.vue')
-const Account = () => import(/* webpackChunkName: "browse" */ '@/views/account.vue')
+const TokenDetail = () => import(/* webpackChunkName: "token-detail" */ '@/views/token_detail.vue')
+const Account = () => import(/* webpackChunkName: "account" */ '@/views/account.vue')
 const Browse = () => import(/* webpackChunkName: "browse" */ '@/views/browse.vue')
 const Recent = () => import(/* webpackChunkName: "recent" */ '@/views/recent.vue')
 const BrowseCollection = () => import(/* webpackChunkName: "browse-collection" */ '@/views/browse_collections')
@@ -34,7 +35,15 @@ const routes = [
         component: Browse
     },
     {
+        path: "/browse/recent",
+        component: Browse
+    },
+    {
         path: "/browse/recent/:page",
+        component: Browse
+    },
+    {
+        path: "/browse/artist/:name",
         component: Browse
     },
     {
@@ -59,7 +68,14 @@ const routes = [
     },
     {
         path: "/my_collection",
-        component: MyCollection
+        component: MyCollection,
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
+        path: "/tokens/:id",
+        component: TokenDetail
     },
     {
         path: "/admin",

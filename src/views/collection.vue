@@ -22,7 +22,7 @@
       <div class="grid grid-cols-12 gap-2 pb-12 pt-0 px-2 md:px-8">
         <div v-for="tokenObject in myTokens.slice(this.start, this.end)" :key="tokenObject.id"
              class="col-span-12 lg:col-span-3 mt-1 px-5 md:px-1 py-5 md:py-1">
-          <TokenCard :price="tokenObject.price" :is_owner="true" :id="tokenObject.id" :token="tokenObject.token"/>
+          <TokenCard :fetch_price="true" :is_owner="true" :id="tokenObject.id" :token="tokenObject.token"/>
         </div>
       </div>
     </div>
@@ -49,6 +49,8 @@
 import TokenCard from "@/components/TokenCard";
 import Loader from "@/components/Loader";
 import {utils} from "near-api-js";
+import axios from "axios";
+import {constants} from "@/helpers/constants";
 
 export default {
   name: "collection",
@@ -57,7 +59,7 @@ export default {
     return {
       newest: true,
       start: 0,
-      end: 8,
+      end: 4,
       myTokens: [],
       is_loaded: false,
       error: false
@@ -65,6 +67,7 @@ export default {
   },
   watch: {
     newest(val) {
+      this.end = 8
       this.myTokens = this.myTokens.reverse()
     }
   },
@@ -78,18 +81,15 @@ export default {
     async fetchUserTokens() {
       await this.$store.dispatch('loader', true)
       try {
-        const myTokens = await window.contract.get_tokens({accountId: window.accountId})
-        if (myTokens) {
-          for (const token of myTokens) {
-            const response = await window.contract.get_price({token_id: token.id})
-            if (response) {
-              token.price = utils.format.formatNearAmount(response)
-            }
-          }
+        /* const myTokens = await window.contract.get_tokens({accountId: window.accountId}) */
+        const {data: myTokens} = await axios.get(`${constants.rpc_api}/tokens/get_tokens_of/${window.accountId}`)
+        if (myTokens && typeof myTokens !== "string") {
           this.myTokens = myTokens
           this.is_loaded = true
           this.$store.commit('saveUserCollection', myTokens)
           this.$store.dispatch('loader', false)
+        } else {
+          this.myTokens = []
         }
       } catch (e) {
         console.log(e)

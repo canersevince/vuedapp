@@ -26,7 +26,8 @@
 
 <script>
 import TokenCard from '@/components/TokenCard'
-
+import {constants} from '@/helpers/constants'
+import axios from 'axios'
 export default {
   components: {TokenCard},
   name: "recent",
@@ -47,10 +48,17 @@ export default {
   methods: {
     async fetchRecent() {
       try {
-        const data = await window.contract.get_recent_tokens()
+        // const data = await window.contract.get_recent_tokens()
+        const {data} = await axios.get(`${constants.rpc_api}/tokens/get_recent_tokens`)
+        console.log(data)
+        console.log(data)
+        console.log(data)
         this.recentTokens = data.reverse()
         this.showEmpty = this.recentTokens.length === 0
       } catch (e) {
+        console.log(e)
+        console.log(e)
+        console.log(e)
         console.log(e)
       }
     },

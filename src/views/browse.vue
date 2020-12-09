@@ -22,11 +22,24 @@
             <li
                 class="py-2 px-4 cursor-pointer transition-all duration-300 border border-gray-200 radius-lg font-light">
               or search by Artist Name
-              <input
-                  @keydown.enter.prevent="searchByArtist"
-                  v-model="artistName"
-                  class="appearance-none block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
-                  type="text">
+              <div class="rounded w-full shadow-md relative mt-2">
+                <ul class="list-reset w-full m-0">
+                  <li class="p-0">
+                    <input
+                        @keydown.enter.prevent="searchByArtist"
+                        v-model="artistName"
+                        class="block w-full bg-gray-200 text-gray-700 border border-gray-200 rounded
+                        py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+                    >
+                  </li>
+                  <li @click="searchByClick(minter)" v-show="artistName.length>0" v-for="minter in filteredMinters"
+                      :key="minter">
+                    <p class="p-2 block text-black hover:bg-grey-light cursor-pointer">
+                      {{ minter }}
+                    </p>
+                  </li>
+                </ul>
+              </div>
             </li>
           </ul>
           <h1 class="mx-auto uppercase text-gray-700 text-center text-xl font-bold mt-2">Music Genres</h1>
@@ -34,8 +47,13 @@
         </div>
         <div class="col-span-12 lg:col-span-9 gap-1 px-5">
           <div class="grid grid-cols-12 gap-2">
-            <div v-for="tokenObject in browsingTokens" :key="tokenObject.id" class="col-span-6 md:col-span-4 h-full">
-              <TokenCard  style="border: 0.01em dashed;"  :style="{borderColor: tokenObject.token.background_color}"  :price="tokenObject.price" :fetch_price="true" :is_owner="false" :id="tokenObject.id"
+            <div v-for="tokenObject in browsingTokens"
+                 :key="tokenObject.id" class="col-span-6 md:col-span-4 h-full">
+              <TokenCard :fetch_price="true"
+                         style="border: 0.01em dashed;"
+                         :style="{borderColor: tokenObject.token.background_color}"
+                         :is_owner="false"
+                         :id="tokenObject.id"
                          :token="tokenObject.token"/>
               <p v-if="browsingTokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
             </div>
@@ -45,7 +63,7 @@
           </div>
         </div>
       </div>
-      <div class="container mx-auto max-w-full flex items-center justify-center py-8">
+      <div class="container mx-auto max-w-full flex items-center justify-center py-8" v-if="totalSupply >perPage">
         <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
           <a href="#"
              v-if="currentPage>1 && pages.length>1"
@@ -98,7 +116,8 @@
 <script>
 import TokenCard from "@/components/TokenCard";
 import GenreFilter from "@/components/GenreFilter";
-import {utils} from "near-api-js";
+import axios from "axios";
+import {constants} from "@/helpers/constants";
 
 export default {
   name: "browse",
@@ -111,7 +130,8 @@ export default {
       browsingTokens: [],
       showEmpty: false,
       totalSupply: 0,
-      fetched: false
+      fetched: false,
+      minters: [],
     }
   },
   watch: {
@@ -132,28 +152,31 @@ export default {
     searchByArtist() {
       this.$router.push(`/browse/artist/${this.artistName}/1`).then(() => this.browseArtist())
     },
+    searchByClick(artist) {
+      this.$router.push(`/browse/artist/${artist}/1`).then(() => this.browseArtist())
+    },
     isActive(a) {
       return this.$route.path.toLowerCase().indexOf(a) > -1
     },
-    async browseArtist() {
+    async browseArtist(external) {
       const artist = this.$route.params.name
-      const page = this.$route.params.page
-      if (!artist || !page) {
+      let page = this.$route.params.page
+      if (!artist) {
         this.browsingTokens = []
       } else {
+        if (!page) {
+          page = 1
+        }
         try {
-          const tokens = await window.contract.get_tokens({accountId: artist})
-          if (tokens) {
-            for (const token of tokens) {
-              const response = await window.contract.get_price({token_id: token.id})
-              if (response) {
-                token.price = utils.format.formatNearAmount(response)
-              }
-            }
-            this.browsingTokens = tokens
+          /* const tokens = await window.contract.get_tokens({accountId: artist}) */
+          this.$store.dispatch('loader', true)
+          const {data: Tokens} = await axios.get(`${constants.rpc_api}/tokens/get_tokens_of/${artist}`)
+          if (Tokens && typeof Tokens !== 'string') {
+            this.browsingTokens = Tokens
+            this.$store.dispatch('loader', false)
           } else {
             this.showEmpty = true
-
+            this.$store.dispatch('loader', false)
           }
         } catch (e) {
           console.log(e)
@@ -162,21 +185,25 @@ export default {
             return
           }
           this.is_loaded = true
+          this.$store.dispatch('loader', false)
         }
       }
     },
     async fetchRecent() {
       try {
-        const data = await window.contract.get_recent_tokens()
-        this.browsingTokens = data.reverse()
-        this.showEmpty = this.browsingTokens.length === 0
+        const {data: Recent} = await axios.get(`${constants.rpc_api}/tokens/get_recent_tokens`)
+        /* const data = await window.contract.get_recent_tokens()*/
+        if (typeof Recent !== 'string') {
+          this.browsingTokens = data.reverse()
+          this.showEmpty = this.browsingTokens.length === 0
+        }
       } catch (e) {
         console.log(e)
       }
     },
     fetchByPage() {
       this.$store.dispatch('loader', true)
-      window.contract.get_tokens_by_page({page: this.currentPage, perPage: this.perPage}).then(res => {
+      /* window.contract.get_tokens_by_page({page: this.currentPage, perPage: this.perPage}).then(res => {
         console.log(res)
         this.browsingTokens = res;
         this.fetched = true
@@ -184,10 +211,24 @@ export default {
       }).catch(err => {
         console.log(err)
         this.$store.dispatch('loader', false)
-      })
+      }) */
+      axios.get(`${constants.rpc_api}/tokens/get_tokens_by_page/${this.currentPage}/${this.perPage}`)
+          .then(res => {
+            if (res.data && typeof res.data !== 'string') {
+              this.browsingTokens = res.data
+              this.fetched = true
+              this.$store.dispatch('loader', false)
+            } else {
+              this.$store.dispatch('loader', false)
+            }
+          })
+
     }
   },
   computed: {
+    filteredMinters() {
+      return this.minters.filter(val => val.toLowerCase().indexOf(this.artistName) > -1)
+    },
     pages() {
       if (this.totalSupply > 0) {
         return new Array(Math.ceil(this.totalSupply / this.perPage))
@@ -196,19 +237,29 @@ export default {
     }
   },
   async mounted() {
-    this.totalSupply = await window.contract.token_supply()
+    // is artist
+    const isArtist = this.$route.params
+    if (isArtist.name) {
+      this.browseArtist()
+      return
+    }
+    /* this.totalSupply = await window.contract.token_supply() */
+    const {data: Supply} = axios.get(`${constants.rpc_api}/tokens/token_supply`)
+    if (Supply) {
+      this.totalSupply = Supply
+    }
+
     if (!this.fetched) {
       const page = this.$route.params.page
-      console.log(page)
-      console.log(page)
-      console.log(page)
       if (page) {
         this.currentPage = parseInt(page)
       }
     }
-    console.log(this.totalSupply)
-
     this.fetchByPage()
+    const {data: Minters} = await axios.get(`${constants.rpc_api}/minters/get_all_minters`)
+    if (typeof Minters !== "string") {
+      this.minters = Minters
+    }
   }
 }
 </script>

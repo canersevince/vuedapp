@@ -38,7 +38,8 @@
             <div
                 v-for="tokenObject in collectionTokens.slice(0, collectionTokens.length>= 8 ? max : collectionTokens.length)"
                 :key="tokenObject.id" class="col-span-6 md:col-span-4">
-              <TokenCard :price="tokenObject.price" :fetch_price="true" :is_owner="false" :id="tokenObject.id"
+              <TokenCard :is_collection_page="true" :price="tokenObject.price" :fetch_price="true" :is_owner="false"
+                         :id="tokenObject.id"
                          :token="tokenObject.token"/>
               <p v-if="collectionTokens.length === 0" class="text-red-500 text-md">There are no tokens here...</p>
             </div>
@@ -80,8 +81,8 @@ export default {
       showEmpty: false
     }
   },
-  watch:{
-    newest(){
+  watch: {
+    newest() {
       this.collectionTokens = this.collectionTokens.reverse();
     }
   },
