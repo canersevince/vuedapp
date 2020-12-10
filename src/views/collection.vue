@@ -162,7 +162,7 @@ export default {
         this.$store.commit('saveUserCollection', myTokens)
         this.$store.dispatch('loader', false)
       } else {
-        this.error = true
+
       }
       this.$store.dispatch('loader', false)
       this.is_loaded = true

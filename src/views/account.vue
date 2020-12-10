@@ -19,7 +19,7 @@
                 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
             id="grid-file" placeholder="My Precious...">
         <div class="text-center my-2">
-          <img width="125" class="rounded-full mx-auto" :src="currentImage ? currentImage : imgData"
+          <img width="125" class="rounded-full mx-auto" :src="currentImage ? base_src+currentImage : imgData"
                v-if="currentImage || imgData" alt="">
           <button
               class="transition mt-2 duration-300 mx-auto px-5 py-2 custom-red text-gray-100 hover:text-white transform hover:scale-110 hover:shadow-md"
@@ -97,7 +97,8 @@ export default {
     twitter: "",
     image: null,
     imgData: null,
-    currentImage: ""
+    currentImage: "",
+    base_src: constants.img_base_url
   }),
   methods: {
     async setPP(e) {
@@ -119,7 +120,7 @@ export default {
         }
       }
       const payload = {
-        pp: PP && PP.data ? PP.data : this.currentImage,
+        pp: PP && PP.path ? PP.path : this.currentImage,
         website: this.website,
         description: this.description,
         instagram: this.instagram,

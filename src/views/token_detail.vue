@@ -40,7 +40,7 @@
                v-if="token"
                :style="{borderColor: token.background_color && token.background_color.length>0 && token.background_color !== '#ffffff' ? token.background_color : 'transparent'}">
             <img @dragstart="e => e.preventDefault()" @contextmenu="(e) => e.preventDefault()"
-                 class="mx-auto object-contain w-full" :src="token.image_url" alt="">
+                 class="mx-auto object-contain w-full" :src="base_url + token.image_url" alt="">
           </div>
         </div>
         <div
@@ -105,7 +105,8 @@ export default {
     owner: null,
     collection: null,
     price: null,
-    id: null
+    id: null,
+    base_url: constants.img_base_url
   }),
   methods: {
     sell() {

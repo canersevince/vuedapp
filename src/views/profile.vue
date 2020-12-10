@@ -2,7 +2,7 @@
   <div class="container mx-auto flex-col flex max-w-full">
     <div v-if="account" class="relative container md:mx-auto py-4 max-w-full"
     >
-      <img width="150" :src="account.pp" class="mx-auto rounded-full" :alt="id">
+      <img width="150" :src="base_src+account.pp" class="mx-auto rounded-full" :alt="id">
       <h1 class="z-100 lowercase text-white my-4 items-center justify-center text-3xl font-bold leading-tight text-center">
         {{ id }} </h1>
       <p class="z-100 text-center text-sm text-gray-100">
@@ -156,7 +156,8 @@ export default {
       tokens: [],
       collections: [],
       total_owned: null,
-      total_owned_collections: null
+      total_owned_collections: null,
+      base_src: constants.img_base_url
     }
   },
   watch: {

@@ -407,7 +407,9 @@ export function batch_mint_payment(name: string,
         balance = new Array<TokenId>();
     }
     const targetCollection = collections.getSome(collection_id)
-    assert(targetCollection.owner == context.predecessor, "YOU CANNOT MINT ON THIS COLLECTION")
+    if (collection_id > 0) {
+        assert(targetCollection.owner == context.predecessor, "YOU CANNOT MINT ON THIS COLLECTION")
+    }
     for (let i = 0; i < amount; i++) {
         const currentID = storage.getPrimitive<u32>(TOTAL_SUPPLY, 0)
         balance.push(currentID)
@@ -482,18 +484,13 @@ export function get_owned_token_ids(accountId: string): TokenId[] | null {
 }
 
 export function get_tokens_by_collection(collectionId: CollectionId): DTO[] {
-    const collectionObj = collections.getSome(collectionId)
-    if (collectionObj) {
-        const result: DTO[] = new Array<DTO>(/* collectionObj.tokens.length*/)
-        for (let i = 0; i < collectionObj.tokens.length; i++) {
-            const token = collectionObj.tokens[i];
-            if (token) {
-                result[i] = new DTO(tokens.getSome(token), token)
-            }
-        }
-        return result
+    const coll = collections.getSome(collectionId)
+    const TokenIds = coll.tokens
+    const result: DTO[] = new Array<DTO>()
+    for (let i = 0; i < TokenIds.length; i++) {
+        result.push(new DTO(tokens.getSome(TokenIds[i]), TokenIds[i]))
     }
-    return []
+    return result
 }
 
 export function get_escrow_tokens(account_id: AccountId): DTOArray | null {

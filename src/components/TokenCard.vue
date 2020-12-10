@@ -32,7 +32,7 @@
       <router-link v-if="!is_collection_page" tag="a" :to="`/profile/${tokenObj.creator}`"
                    class="flex items-center no-underline hover:underline text-black">
         <img width="32" alt="Placeholder" class="block rounded-full"
-             :src="user_picture && user_picture.length> 0 ? user_picture : 'https://picsum.photos/32/32/?random'">
+             :src="user_picture && user_picture.length> 0 ? base_src+user_picture : 'https://picsum.photos/32/32/?random'">
         <p class="ml-2 text-sm">
           {{ tokenObj.creator }}
         </p>

@@ -11,14 +11,14 @@
 
     <p class="pb-2 pt-3 text-center text-gray-500">
       {{
-        totalCollection > 1 ? `There are ${totalCollection} collections.` : `There is ${totalCollection} collection`
+        totalCollection > 2 ? `There are ${totalCollection-1} collections.` : `There is ${totalCollection-1} collection`
       }}</p>
     <div class="container mx-auto">
       <div class="grid grid-cols-12">
         <div class="col-span-12 gap-1 px-5">
           <div class="grid grid-cols-12 gap-6">
             <div :key="collectionObj.id" v-for="collectionObj in collections" class="col-span-12 md:col-span-4">
-              <CollectionCard :id="collectionObj.id" :collection="collectionObj.collection"/>
+              <CollectionCard v-if="collectionObj.id>0" :id="collectionObj.id" :collection="collectionObj.collection"/>
               <p v-if="collectionObj.length === 0" class="text-red-500 text-md">There are no collections created,
                 yet...</p>
             </div>

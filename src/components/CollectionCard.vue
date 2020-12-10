@@ -23,7 +23,7 @@
     <footer class="flex items-center justify-between leading-none p-1 md:p-2">
       <a class="flex items-center no-underline hover:underline text-black" href="#">
         <img width="32" alt="Placeholder" class="block rounded-full"
-             :src="user_picture && user_picture.length> 0 ? user_picture : 'https://picsum.photos/32/32/?random'">
+             :src="user_picture && user_picture.length> 0 ? base_src+user_picture : 'https://picsum.photos/32/32/?random'">
         <router-link tag="a" class="ml-2 text-sm text-gray-900" :to="'/profile/'+collection.owner">
           {{ collection.owner }}
         </router-link>

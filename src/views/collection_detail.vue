@@ -94,6 +94,22 @@ export default {
     changeOrder() {
       this.newest = !this.newest
     },
+    async fetchTokens(parsed) {
+      this.$store.dispatch('loader', true)
+      try {
+        this.collectionTokens = await window.contract.get_tokens_by_collection({collectionId: parsed})
+
+        setTimeout(() => {
+          if (self.canReFetch !== null) {
+            self.canReFetch = true
+          }
+        }, 15000)
+      } catch (e) {
+        console.log(e)
+        this.showEmpty = true
+      }
+      this.$store.dispatch('loader', false)
+    },
     async fetchCollectionDetail() {
       this.$store.dispatch('loader', true)
       const id = this.$route.params.id
@@ -105,24 +121,14 @@ export default {
       try {
         const collection = await window.contract.get_collection_by_id({collection_id: parsed})
         if (collection) {
+          console.log({collection})
           this.collection = collection
-          console.log(collection)
           this.$store.dispatch('loader', false)
-          if (collection.tokens.length === 0) {
+          if (collection.tokens.length < 1) {
+            console.log('wtf')
             this.showEmpty = true
           } else {
-            const self = this;
-            try {
-              this.collectionTokens = await window.contract.get_tokens_by_collection({collectionId: parsed})
-              setTimeout(() => {
-                if (self.canReFetch !== null) {
-                  self.canReFetch = true
-                }
-              }, 15000)
-            } catch (e) {
-              this.showEmpty = true
-            }
-            this.$store.dispatch('loader', false)
+            this.fetchTokens(parsed)
           }
         }
       } catch (e) {
@@ -132,8 +138,8 @@ export default {
       }
     }
   },
-  async beforeMount() {
-    await this.fetchCollectionDetail()
+  beforeMount() {
+    this.fetchCollectionDetail()
   }
 }
 </script>
