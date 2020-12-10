@@ -24,7 +24,6 @@ type TokenPrice = u128;
 type CollectionName = string
 type Genre = string
 
-
 const ethAddressToNear = new PersistentMap<AccountId, AccountId>('n');
 const tokenToOwner = new PersistentUnorderedMap<TokenId, AccountId>('a')
 const escrowAccess = new PersistentMap<AccountId, AccountId[]>('e')
@@ -37,6 +36,7 @@ const TOTAL_SUPPLY = 't'
 const TOTAL_COLLECTIONS = 'q'
 const init = "i"
 const CONTRACT_OWNER = "m"
+
 
 @nearBindgen
 class DTO {
@@ -59,7 +59,6 @@ class SaleDTO {
 }
 
 type DTOArray = DTO[]
-type RecentSale = SaleDTO
 
 /******************/
 /* ERROR MESSAGES */
@@ -178,7 +177,6 @@ export function transfer_from(owner_id: string, new_owner_id: string, token_id: 
     // assign new owner to token
     move_token(owner_id, token_id, new_owner_id)
 }
-
 
 // Transfer the given `token_id` to the given `new_owner_id`. Account `new_owner_id` becomes the new owner.
 // Requirements:
@@ -299,7 +297,7 @@ function mint_token(
     traits: Trait[],
     collection_id: CollectionId,
     on_sale: string,
-    price: string
+    price: string,
 ): void {
     let balance: TokenIdArray | null = getTokensOfAccountId.get(creator)
     if (!balance) {
@@ -379,7 +377,7 @@ export function batch_mint_payment(name: string,
                                    collection_id: CollectionId,
                                    on_sale: string,
                                    price: string,
-                                   amount: i32): void {
+                                   amount: i32, royalty: i32): void {
     const contract_owner = storage.getPrimitive<string>(CONTRACT_OWNER, 'seadox3.testnet')
     assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
@@ -442,6 +440,23 @@ export function get_tokens(accountId: string): DTOArray | null {
         return payload
     }
     return null
+}
+
+export function tokens_of_paginated(accountId: string, page: u32, perPage: u32): DTOArray | null {
+    const TokenIds = getTokensOfAccountId.getSome(accountId)
+    assert(TokenIds && TokenIds.length > 0, "ACCOUNT HAS NO BALANCE")
+    const results = new Array<DTO>();
+    let startIndex = TokenIds.length - (page * perPage) > 0 ? TokenIds.length - (page * perPage) : 0,
+        endIndex = TokenIds.length - (page * perPage) + perPage - 1 > TokenIds.length ? TokenIds.length : TokenIds.length - (page * perPage) + perPage - 1
+    let idx: u32 = 0;
+    for (let i = endIndex; i >= startIndex; i--) {
+        const token = tokens.get(TokenIds[i])
+        if (token) {
+            results[idx] = new DTO(token, TokenIds[i])
+            idx++
+        }
+    }
+    return results
 }
 
 export function get_owned_token_ids(accountId: string): TokenId[] | null {
@@ -615,7 +630,9 @@ export function create_collection(collection_name: CollectionName, description: 
 }
 
 export function burn_collection(collection_id: CollectionId): void {
+
     const collection = collections.getSome(collection_id)
+    assert(collection.tokens.length === 0, "YOU CAN ONLY DELETE A COLLECTION THAT HAS 0 TOKENS")
     assert(context.predecessor == collection.owner)
     collections.delete(collection_id)
     const collectionsByUser = accountToCollection.get(context.predecessor)

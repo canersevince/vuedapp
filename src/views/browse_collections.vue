@@ -17,7 +17,7 @@
       <div class="grid grid-cols-12">
         <div class="col-span-12 gap-1 px-5">
           <div class="grid grid-cols-12 gap-6">
-            <div :key="collectionObj.id" v-for="collectionObj in collections" class="col-span-12 md:col-span-3">
+            <div :key="collectionObj.id" v-for="collectionObj in collections" class="col-span-12 md:col-span-4">
               <CollectionCard :id="collectionObj.id" :collection="collectionObj.collection"/>
               <p v-if="collectionObj.length === 0" class="text-red-500 text-md">There are no collections created,
                 yet...</p>
@@ -90,7 +90,7 @@ export default {
   data() {
     return {
       currentPage: 1,
-      perPage: 8,
+      perPage: 6,
       collections: [],
       showEmpty: false,
       totalCollection: 0,

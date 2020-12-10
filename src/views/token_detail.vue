@@ -73,7 +73,7 @@
               class="mt-4 font-major lowercase px-4 py-2 bg-black text-gray-100
               hover:text-white buy-button shadow-md hover:shadow-xl
               transition duration-200 transform hover:scale-105 text-xs">
-            CANCEL SALE | <span class="text-md font-bold lowercase">current price: {{ price }}Ⓝ</span>
+            CANCEL SALE | <span class="text-md font-bold lowercase">current price: {{ price }} <span class="uppercase">Ⓝ</span></span>
           </button>
 
           <button

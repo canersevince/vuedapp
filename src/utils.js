@@ -25,6 +25,7 @@ export async function initContract() {
             "get_recent_tokens",
             "get_owned_token_ids",
             "get_token_details",
+            "tokens_of_paginated",
             "token_supply",
             "get_tokens_by_page",
             "get_price",
