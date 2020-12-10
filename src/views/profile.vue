@@ -155,20 +155,34 @@ export default {
       account: "",
       tokens: [],
       collections: [],
-      total_owned: null
+      total_owned: null,
+      total_owned_collections: null
     }
   },
   watch: {
     currentPage(val) {
       this.$nextTick(() => {
-        this.fetchTokens()
+        if (this.activeTab === 'token') {
+          this.fetchTokens()
+        } else {
+          this.fetchCollections()
+        }
       })
+    },
+    activeTab() {
+      this.currentPage = 1;
     }
   },
   computed: {
     pages() {
-      if (this.total_owned > 0) {
-        return new Array(Math.ceil(this.total_owned / this.perPage))
+      if (this.activeTab === 'token') {
+        if (this.total_owned > 0) {
+          return new Array(Math.ceil(this.total_owned / this.perPage))
+        }
+      } else {
+        if (this.total_owned_collections > 0) {
+          return new Array(Math.ceil(this.total_owned_collections / this.perPage))
+        }
       }
       return new Array(1)
     },
@@ -178,6 +192,7 @@ export default {
   },
   methods: {
     async fetchTokens() {
+      this.$store.dispatch('loader', true)
       const {data: Tokens} = await axios.get(`${constants.rpc_api}/tokens/tokens_of_paginated/${this.id}/${this.currentPage}/${this.perPage}`)
       if (typeof Tokens === "string") {
         console.log(Tokens)
@@ -185,6 +200,17 @@ export default {
       } else {
         this.tokens = Tokens
       }
+      this.$store.dispatch('loader', false)
+    },
+    async fetchCollections() {
+      this.$store.dispatch('loader', true)
+      const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/collections_of_paginated/${this.id}/${this.currentPage}/${this.perPage}`)
+      if (typeof Collections === "string") {
+        this.collections = []
+      } else {
+        this.collections = Collections
+      }
+      this.$store.dispatch('loader', false)
     },
     loadMoreCol() {
       if (this.collectionMax > this.tokens.length) return;
@@ -198,22 +224,17 @@ export default {
     }
     try {
       const {data: tokenIds} = await axios.get(`${constants.rpc_api}/tokens/get_owned_token_ids/${this.id}`)
+      const {data: collIds} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_account_id/${this.id}`)
       this.total_owned = tokenIds.length;
+      this.total_owned_collections = collIds.length;
       await this.fetchTokens()
+      await this.fetchCollections()
       const {data: Account} = await axios.get(`${constants.rpc_api}/accounts/get_account_details/${this.id}`)
       if (typeof Account === "string" && Account.indexOf('Error') > -1) {
         this.account = false
       } else {
         this.account = Account
       }
-      const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_account_id/${this.id}`)
-      if (typeof Collections === "string") {
-        this.collections = []
-      } else {
-        this.collections = Collections
-      }
-      this.collections = this.collections.reverse()
-      this.$store.dispatch('loader', false)
     } catch (e) {
       console.log(e)
       this.$store.dispatch('loader', false)

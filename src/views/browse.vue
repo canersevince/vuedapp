@@ -43,8 +43,9 @@
             </li>
           </ul>
           <h1 class="mx-auto uppercase text-gray-700 text-center text-xl font-bold mt-2">Music Genres</h1>
-          <GenreFilter/>
+          <GenreFilter @switch-genre="switchGenre"/>
         </div>
+
         <div class="col-span-12 lg:col-span-9 gap-1 px-5">
           <div class="grid grid-cols-12 gap-2">
             <div v-for="tokenObject in browsingTokens"
@@ -59,11 +60,13 @@
             </div>
           </div>
           <div v-if="showEmpty">
-            LOOKS LIKE THERE IS NOTHING HERE...
+            <p class="text-md text-center mx-auto">
+              LOOKS LIKE THERE IS NOTHING HERE...
+            </p>
           </div>
         </div>
       </div>
-      <div class="container mx-auto max-w-full flex items-center justify-center py-8" v-if="totalSupply >perPage">
+      <div class="container mx-auto max-w-full flex items-center justify-center py-8" v-if="totalSupply > perPage">
         <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
           <a href="#"
              v-if="currentPage>1 && pages.length>1"
@@ -124,6 +127,7 @@ export default {
   components: {GenreFilter, TokenCard},
   data() {
     return {
+      mode: "",
       artistName: "",
       perPage: 6,
       currentPage: 1,
@@ -140,12 +144,21 @@ export default {
       if (!val) return;
       this.$router.push('/browse/recent/' + val).then(res => {
         this.$nextTick(() => {
-          this.fetchByPage()
+          if (this.mode === 'artist') {
+            this.fetchByPage()
+          } else if (this.mode === 'genre') {
+            this.fetchByGenre()
+          }
         })
       })
     }
   },
   methods: {
+    switchGenre(e) {
+      console.log(e)
+      this.currentPage = 0
+      this.fetchByGenre(e)
+    },
     changePage(i) {
       this.currentPage = i
     },
@@ -201,6 +214,22 @@ export default {
         console.log(e)
       }
     },
+    async fetchByGenre(genre) {
+      try {
+        const page = this.$route.params.page
+        console.log(genre, page)
+        const Sales = await window.contract.get_sales_by_genre({page: parseInt(page), perPage: this.perPage, genre})
+        console.log(Sales)
+        if (typeof Sales !== "string") {
+          this.browsingTokens = Sales
+          this.showEmpty = false
+        }
+      } catch (e) {
+        this.browsingTokens = []
+        this.showEmpty = true
+        console.log(e.message)
+      }
+    },
     fetchByPage() {
       this.$store.dispatch('loader', true)
       /* window.contract.get_tokens_by_page({page: this.currentPage, perPage: this.perPage}).then(res => {
@@ -236,17 +265,30 @@ export default {
       return new Array(1)
     }
   },
-  async mounted() {
-    // is artist
-    const isArtist = this.$route.params
-    if (isArtist.name) {
-      this.browseArtist()
-      return
-    }
+  async beforeMount() {
     /* this.totalSupply = await window.contract.token_supply() */
     const {data: Supply} = axios.get(`${constants.rpc_api}/tokens/token_supply`)
     if (Supply) {
       this.totalSupply = Supply
+    }
+    const {data: Minters} = await axios.get(`${constants.rpc_api}/minters/get_all_minters`)
+    if (typeof Minters !== "string") {
+      this.minters = Minters
+    }
+
+    const genre = this.$route.params.genre
+    if (genre) {
+      this.mode = "genre"
+      await this.fetchByGenre(genre)
+      return
+    }
+
+    // is artist
+    const isArtist = this.$route.params
+    if (isArtist.name) {
+      this.mode = "artist"
+      this.browseArtist()
+      return
     }
 
     if (!this.fetched) {
@@ -256,10 +298,7 @@ export default {
       }
     }
     this.fetchByPage()
-    const {data: Minters} = await axios.get(`${constants.rpc_api}/minters/get_all_minters`)
-    if (typeof Minters !== "string") {
-      this.minters = Minters
-    }
+
   }
 }
 </script>

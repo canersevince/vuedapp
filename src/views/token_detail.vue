@@ -73,7 +73,8 @@
               class="mt-4 font-major lowercase px-4 py-2 bg-black text-gray-100
               hover:text-white buy-button shadow-md hover:shadow-xl
               transition duration-200 transform hover:scale-105 text-xs">
-            CANCEL SALE | <span class="text-md font-bold lowercase">current price: {{ price }} <span class="uppercase">Ⓝ</span></span>
+            CANCEL SALE | <span class="text-md font-bold lowercase">current price: {{ price }} <span
+              class="uppercase">Ⓝ</span></span>
           </button>
 
           <button
@@ -170,9 +171,9 @@ export default {
     },
     buy() {
       if (!this.id) return;
-      const formatted = utils.format.parseNearAmount(this.price)
+      const formatted = utils.format.parseNearAmount(this.price.toString())
       Swal.fire({
-        title: `Are you want to buy this NFT for ${formatted}Ⓝ`,
+        title: `Are you want to buy this NFT for ${this.price}Ⓝ`,
         description: "It might take couple minutes before it shows up in your wallet.",
         icon: "question",
         showCancelButton: true,

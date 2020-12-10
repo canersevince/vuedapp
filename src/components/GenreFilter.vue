@@ -6,12 +6,12 @@
 
              type="text" placeholder="Search...">
     </div>
-    <ul class="list list-none">
+    <ul v-if="filterWord.length>0" class="list list-none">
       <li v-for="genre in filtered" :key="genre"
           class="py-2 px-4 transition-all duration-300 border border-gray-200 radius-lg font-light"
           :class="genre == id ? 'bg-gray-200 shadow-sm' : ''"
       >
-        <router-link tag="a" :to="'/browse/'+genre">{{ genre }}</router-link>
+        <a class="cursor-pointer" @click="$emit('switch-genre', genre)">{{ genre }}</a>
       </li>
       <li
           v-if="filterWord.length===0"
@@ -42,7 +42,7 @@ export default {
       if (this.genres && this.filterWord.length > 0) {
         return this.genres.filter(genre => genre.toLowerCase().includes(this.filterWord))
       }
-      return this.genres.slice(0, 10)
+      return this.genres.slice(0, 14)
     }
   },
   created() {

@@ -90,12 +90,13 @@ export default {
       console.log(e)
     },
     async createCollection() {
-
+      this.$store.dispatch('loader', true)
       if (!this.collectionImage) {
         Swal.fire({
           title: "File is not selected.",
           icon: "warning"
         })
+        this.$store.dispatch('loader', false)
         return
       }
       const {data: fileUrl} = await uploadFile(this.collectionImage)
@@ -111,7 +112,12 @@ export default {
       }).catch(error => console.error(error))
     },
     fileSelected(e) {
-      if (e.target.files[0].type !== 'image/png') {
+      console.log(e.target.files[0])
+      if (e.target.files[0].type !== 'image/png' &&
+          e.target.files[0].type !== 'image/jpg' &&
+          e.target.files[0].type !== 'image/jpeg' &&
+          e.target.files[0].type !== 'image/svg+xml' &&
+          e.target.files[0].type !== 'image/gif') {
         this.file_error = true
         return false
       }

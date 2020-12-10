@@ -103,16 +103,17 @@
             <div>
               <button
                   @click="toggleUser"
-                  class="bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                  class="mx-auto bg-gray-800 flex text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
                   id="user-menu" aria-haspopup="true">
                 <span class="sr-only">Open user menu</span>
                 <img
                     v-if="threeBoxUser"
-                    class="h-10 w-10 rounded-full"
+                    class="h-8 w-8 rounded-full"
                     :src="threeBoxUser ? 'https://ipfs.infura.io/ipfs/'+threeBoxUser.image[0].contentUrl['/'] : ''"
                     alt="">
                 <i v-else class="fa fa-user h-10 w-10 p-2 flex items-center justify-center" style="font-size: 28px"></i>
               </button>
+              <p class="cursor-default text-xs text-white mx-auto">{{ balance }}Ⓝ</p>
             </div>
             <!--
               Profile dropdown panel, show/hide based on dropdown state.
@@ -132,7 +133,8 @@
               <router-link :to="'/profile/'+accountId" href="#" exact-active-class="bg-gray-400"
                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
                            role="menuitem">Profile
-              </router-link><router-link to="/account" href="#" exact-active-class="bg-gray-400"
+              </router-link>
+              <router-link to="/account" href="#" exact-active-class="bg-gray-400"
                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-600 hover:text-white"
                            role="menuitem">Account
               </router-link>
@@ -214,6 +216,7 @@
 import main_nav_items from '../helpers/main_nav.json'
 import {logout, login} from '../utils'
 import UserInfoContainer from "@/components/UserInfoContainer";
+import {utils} from 'near-api-js'
 
 export default {
   name: "Navigation",
@@ -223,7 +226,8 @@ export default {
       is_active: false,
       is_user_dropdown_active: false,
       main_nav_items,
-      is_admin: false
+      is_admin: false,
+      balance: null
     }
   },
   methods: {
@@ -263,6 +267,14 @@ export default {
     },
     is_minter() {
       return this.$store.getters['getMinter']
+    }
+  },
+  async beforeUpdate() {
+    try {
+      const bal = await contract.account.getAccountBalance()
+      this.balance = utils.format.formatNearAmount(bal.available, 2)
+    } catch (e) {
+      console.log(e)
     }
   },
   async beforeMount() {

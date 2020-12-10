@@ -30,6 +30,7 @@ export async function initContract() {
             "get_tokens_by_page",
             "get_price",
             "get_sales",
+            "get_sales_by_genre",
             "get_contract_owner",
             "get_collections",
             "get_collection_by_id",

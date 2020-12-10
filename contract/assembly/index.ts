@@ -199,6 +199,7 @@ function move_token(predecessor: string, token_id: TokenId, new_owner_id: string
     if (!fromTokens || fromTokens.length == 0) {
         return
     } else {
+        const token = tokens.getSome(token_id)
         const newBalance = new Array<TokenId>();
         let oldBalIdx: u32 = 0;
         // exclude the token you want to transfer from owner TokenId[]
@@ -210,7 +211,6 @@ function move_token(predecessor: string, token_id: TokenId, new_owner_id: string
         }
         // save new array for old owner,
         getTokensOfAccountId.set(predecessor, newBalance)
-
         // create and push TokenId Array for new owner.
         let newOwnerWallet = getTokensOfAccountId.get(new_owner_id)
         if (newOwnerWallet && newOwnerWallet.length > 0) {
@@ -223,6 +223,15 @@ function move_token(predecessor: string, token_id: TokenId, new_owner_id: string
         }
         tokenToOwner.delete(token_id)
         tokenToOwner.set(token_id, new_owner_id)
+        const saleByGenre = salesByGenre.get(token.genre)
+        if (saleByGenre) {
+            for (let i = 0; i < saleByGenre.length; i++) {
+                if (saleByGenre[i] == token_id) {
+                    saleByGenre.splice(i, 1)
+                    salesByGenre.set(token.genre, saleByGenre)
+                }
+            }
+        }
     }
 }
 
@@ -236,7 +245,7 @@ export function check_access(account_id: string): boolean {
     const caller = context.predecessor
     // throw error if someone tries to check if they have escrow access to their own account;
     // not part of the spec, but an edge case that deserves thoughtful handling
-    assert(caller != account_id, ERROR_CALLER_ID_DOES_NOT_MATCH_EXPECTATION)
+    assert(caller !== account_id, ERROR_CALLER_ID_DOES_NOT_MATCH_EXPECTATION)
     assert(escrowAccess.contains(account_id), ERROR_NO_ESCROW_REGISTERED)
 
     // if we haven't set an escrow yet, then caller does not have access to account_id
@@ -257,7 +266,7 @@ export function check_access(account_id: string): boolean {
 function check_access_internally(account_id: string, caller: string): boolean {
     // throw error if someone tries to check if they have escrow access to their own account;
     // not part of the spec, but an edge case that deserves thoughtful handling
-    assert(caller != account_id, ERROR_CALLER_ID_DOES_NOT_MATCH_EXPECTATION)
+    assert(caller !== account_id, ERROR_CALLER_ID_DOES_NOT_MATCH_EXPECTATION)
     assert(escrowAccess.contains(account_id), ERROR_NO_ESCROW_REGISTERED)
 
     // if we haven't set an escrow yet, then caller does not have access to account_id
@@ -285,7 +294,7 @@ export function get_token_owner(token_id: TokenId): string | null {
 
 /********************/
 
-function mint_token(
+function _mint_token(
     name: string,
     description: string,
     image_url: string,
@@ -353,7 +362,7 @@ export function mint_payment(name: string,
     assert(allowedMinters.getSome(context.predecessor) === true, "YOU ARE NOT ALLOWED TO MINT.")
     ContractPromiseBatch.create(contract_owner).transfer(context.attachedDeposit)
     const creator = context.predecessor
-    mint_token(name,
+    _mint_token(name,
         description,
         image_url,
         background_color,
@@ -541,6 +550,24 @@ export function get_sales(account_id: AccountId): DTOArray | null {
     return null
 }
 
+export function get_sales_by_genre(genre: string, perPage: u32, page: u32): DTOArray {
+    const salesArray = salesByGenre.getSome(genre)
+    let startIndex = salesArray.length - (page * perPage) > 0 ? salesArray.length - (page * perPage) : 0
+    // 4
+    let endIndex = salesArray.length - ((page * perPage) - perPage) > 0 ? salesArray.length - ((page * perPage) - perPage) : salesArray.length
+    // 12
+    const results = new Array<DTO>();
+    let idx: u32 = 0;
+    for (let i = endIndex; i > startIndex; i--) {
+        const token = tokens.get(i)
+        if (token) {
+            results[idx] = new DTO(token, i)
+            idx++
+        }
+    }
+    return results
+}
+
 export function get_price(token_id: TokenId): TokenPrice | null {
     return tokenPrices.get(token_id)
 }
@@ -594,7 +621,7 @@ export function token_supply(): u32 {
 export function buy(token_id: TokenId): void {
     const buyer = context.predecessor;
     const price: TokenPrice = tokenPrices.getSome(token_id);
-    const owner = tokenToOwner.get(token_id, "")
+    const owner = tokenToOwner.get(token_id, null)
 
     if (!price || !owner) {
         ContractPromiseBatch.create(buyer as string).transfer(context.attachedDeposit)
@@ -684,6 +711,23 @@ export function get_collections(perPage: u32, page: u32): CollectionDTO[] {
 
 export function total_collections(): u32 {
     return collections.length
+}
+
+export function collections_of_paginated(accountId: string, page: u32, perPage: u32): CollectionDTO[] | null {
+    const CollectionIDS = accountToCollection.getSome(accountId)
+    assert(CollectionIDS && CollectionIDS.length > 0, "ACCOUNT HAS NO COLLECTION")
+    const results = new Array<CollectionDTO>();
+    let startIndex = CollectionIDS.length - (page * perPage) > 0 ? CollectionIDS.length - (page * perPage) : 0,
+        endIndex = CollectionIDS.length - (page * perPage) + perPage - 1 > CollectionIDS.length ? CollectionIDS.length : CollectionIDS.length - (page * perPage) + perPage - 1
+    let idx: u32 = 0;
+    for (let i = endIndex; i >= startIndex; i--) {
+        const coll = collections.get(CollectionIDS[i])
+        if (coll) {
+            results[idx] = new CollectionDTO(CollectionIDS[i], coll)
+            idx++
+        }
+    }
+    return results
 }
 
 

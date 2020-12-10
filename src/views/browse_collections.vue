@@ -116,21 +116,24 @@ export default {
   },
   methods: {
     async fetchCollection() {
+      this.$store.dispatch('loader', true)
       const page = this.$route.params.page
       try {
         this.fetched = true
         const {data: TotalCollections} = await axios.get(`${constants.rpc_api}/collections/total_collections`)
         this.totalCollection = TotalCollections
-        // const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_pages/${page ? parseInt(page) : 1}/${parseInt(this.perPage)}`)
-        this.collections = await window.contract.get_collections({
+        const {data: Collections} = await axios.get(`${constants.rpc_api}/collections/get_collections_by_pages/${page ? parseInt(page) : 1}/${parseInt(this.perPage)}`)
+        /* this.collections = await window.contract.get_collections({
           page: page ? parseInt(page) : 1,
           perPage: this.perPage
-        })
+        }) */
+        this.collections = Collections
         this.showEmpty = this.collections.length === 0;
       } catch (err) {
         this.showEmpty = true
         console.log(err)
       }
+      this.$store.dispatch('loader', false)
     },
     changePage(i) {
       this.currentPage = i

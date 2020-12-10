@@ -51,7 +51,7 @@ const routes = [
         component: Browse
     },
     {
-        path: "/browse/genre/:genre",
+        path: "/browse/genre/:genre/:page",
         component: Browse
     },
     {
