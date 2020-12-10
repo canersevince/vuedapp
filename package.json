@@ -24,6 +24,7 @@
     "big.js": "^6.0.2",
     "core-js": "~3.6.5",
     "crypto-js": "^4.0.0",
+    "ipfs-http-client": "^48.1.2",
     "near-api-js": "^0.34.0",
     "sweetalert2": "^10.11.1",
     "verte": "^0.0.12",

@@ -1,7 +1,8 @@
 <template>
   <div v-if="tokenObj" class="overflow-hidden shadow-md p-1">
     <router-link :to="`/tokens/${id}`">
-      <img :alt="tokenObj.name" class="token_preview block object-contain object-center mx-auto" :src="token.image_url">
+      <img :alt="tokenObj.name" class="token_preview block object-contain object-center mx-auto"
+           :src="base_src+token.image_url">
     </router-link>
 
     <header class="flex flex-col items-start justify-between leading-tight p-1 md:p-2">
@@ -71,7 +72,8 @@ export default {
       tokenObj: null,
       fetchedPrice: null,
       user_picture: null,
-      owner: null
+      owner: null,
+      base_src: constants.img_base_url
     }
   },
   methods: {

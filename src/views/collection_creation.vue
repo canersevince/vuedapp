@@ -99,7 +99,7 @@ export default {
         this.$store.dispatch('loader', false)
         return
       }
-      const {data: fileUrl} = await uploadFile(this.collectionImage)
+      const {path: fileUrl} = await uploadFile(this.collectionImage)
       const {collection_name, description, external_url} = this.collection
       window.contract.create_collection({
         collection_name,

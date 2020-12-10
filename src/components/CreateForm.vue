@@ -274,7 +274,7 @@ export default {
   watch: {
     is_collection(val) {
       if (val === true) {
-        if(this.token.amount > 1){
+        if (this.token.amount > 1) {
           Swal.fire({
             title: "Warning",
             description: "Collection NFT's cannot batch minted."
@@ -366,12 +366,10 @@ export default {
         return
       }
 
-      const {data: ImageLink} = await uploadFile(this.imageFile)
-
-
+      const {path: ImageLink} = await uploadFile(this.imageFile)
       if (!ImageLink) {
         Swal.fire({
-          title: "ERror!",
+          title: "Error!",
           text: "There was an error while upload. Please try again..",
           icon: "error",
         })

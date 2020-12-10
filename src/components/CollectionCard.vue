@@ -2,7 +2,7 @@
   <div class="overflow-hidden shadow-md p-1">
     <router-link :to="`/collection/${id}`">
       <img :alt="collection.name" class="collection_preview block object-contain object-center mx-auto"
-           :src="collection.image_url">
+           :src="base_src+collection.image_url">
     </router-link>
     <header class="flex flex-col items-start justify-between leading-tight p-1 md:p-2">
       <h1 class="text-lg">
@@ -45,7 +45,8 @@ export default {
   },
   data() {
     return {
-      user_picture: null
+      user_picture: null,
+      base_src: constants.img_base_url
     }
   },
   async created() {
