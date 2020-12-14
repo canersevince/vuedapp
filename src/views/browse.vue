@@ -70,7 +70,7 @@
         <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
           <a href="#"
              v-if="currentPage>1 && pages.length>1"
-             @click.prevent="currentPage++"
+             @click.prevent="currentPage--"
              style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;  "
              class="relative inline-flex items-center px-2 py-2 border rounded-full border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
             <span class="sr-only">Previous</span>
@@ -148,6 +148,8 @@ export default {
             this.fetchByPage()
           } else if (this.mode === 'genre') {
             this.fetchByGenre()
+          } else {
+            this.fetchByPage()
           }
         })
       })
