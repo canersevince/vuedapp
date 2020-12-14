@@ -12,7 +12,7 @@
         </router-link>
       </p>
       <div class="absolute bg-cover bg-center w-full h-full top-0 left-0"
-           style="z-index : -1;" :style="{backgroundImage : `url(${collection.image_url})`}">
+           style="z-index : -1;" :style="{backgroundImage : `url(${base_url+collection.image_url})`}">
       </div>
       <div style="z-index : -1;"
            class="overlay bg-gray-800 opacity-75 top-0 left-0 pointer-events-none z-10 absolute w-full h-full"></div>
@@ -37,7 +37,7 @@
           <div class="grid grid-cols-12 gap-2">
             <div
                 v-for="tokenObject in collectionTokens.slice(0, collectionTokens.length>= 8 ? max : collectionTokens.length)"
-                :key="tokenObject.id" class="col-span-6 md:col-span-4">
+                :key="tokenObject.id" class="col-span-12 md:col-span-4">
               <TokenCard :is_collection_page="true" :price="tokenObject.price" :fetch_price="true" :is_owner="false"
                          :id="tokenObject.id"
                          :token="tokenObject.token"/>
@@ -65,6 +65,7 @@
 
 <script>
 import TokenCard from '@/components/TokenCard'
+import {constants} from "@/helpers/constants";
 
 export default {
   name: "collection_detail",
@@ -78,7 +79,8 @@ export default {
       max: 8,
       collection: null,
       collectionTokens: [],
-      showEmpty: false
+      showEmpty: false,
+      base_url: constants.img_base_url
     }
   },
   watch: {

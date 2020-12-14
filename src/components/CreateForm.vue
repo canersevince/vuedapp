@@ -375,8 +375,6 @@ export default {
         })
         return
       }
-      console.log(ImageLink)
-
 
       const token = {
         name: this.token.name,

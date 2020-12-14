@@ -24,7 +24,10 @@ export const uploadFile = async (file) => {
                 progress: (prog) => console.log(`uploading... ${prog}`)
             }
         )
+        const pin  = await ipfs.pin.add(added.path);
+
         console.log(added)
+        console.log({pin})
         return added
     } catch (err) {
         console.error(err)

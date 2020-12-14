@@ -66,7 +66,7 @@
           </div>
         </div>
       </div>
-      <div class="container mx-auto max-w-full flex items-center justify-center py-8" v-if="totalSupply > perPage">
+      <div class="container mx-auto max-w-full flex items-center justify-center py-8" v-if="totalSupply >= perPage">
         <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
           <a href="#"
              v-if="currentPage>1 && pages.length>1"
@@ -267,10 +267,11 @@ export default {
   },
   async beforeMount() {
     /* this.totalSupply = await window.contract.token_supply() */
-    const {data: Supply} = axios.get(`${constants.rpc_api}/tokens/token_supply`)
-    if (Supply) {
+    const {data: Supply} = await axios.get(`${constants.rpc_api}/tokens/token_supply`)
+    if (Supply && typeof Supply !== "string") {
       this.totalSupply = Supply
     }
+    console.log({Supply})
     const {data: Minters} = await axios.get(`${constants.rpc_api}/minters/get_all_minters`)
     if (typeof Minters !== "string") {
       this.minters = Minters
