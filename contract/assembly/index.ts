@@ -1,6 +1,7 @@
 import {
     context,
     ContractPromiseBatch,
+    env,
     logging,
     PersistentMap,
     PersistentUnorderedMap,
@@ -8,8 +9,8 @@ import {
     u128,
 } from "near-sdk-as";
 
-import {Collection, collections, Token, TokenId, tokens, Trait} from './model'
-import {AccountDetails, AccountDetail} from "./user";
+import {Bid, bids, Collection, collections, Token, TokenId, tokens, Trait} from './model'
+import {AccountDetail, AccountDetails} from "./user";
 
 
 /**************************/
@@ -20,7 +21,7 @@ type TokenIdArray = u32[]
 export type CollectionId = u32
 export type CollectionIdArray = CollectionId[]
 export type AccountId = string
-type TokenPrice = u128;
+export type TokenPrice = u128;
 type CollectionName = string
 type Genre = string
 
@@ -36,6 +37,7 @@ const TOTAL_SUPPLY = 't'
 const TOTAL_COLLECTIONS = 'q'
 const init = "i"
 const CONTRACT_OWNER = "m"
+const FEE = "f"
 
 
 @nearBindgen
@@ -90,12 +92,22 @@ export function launch(owner: string): void {
             "http://www.nearfolio.io",
             "http://www.nearfolio.io/logo.png",
             [])
+        storage.set(FEE, 40)
         collections.set(0, defaultCollection)
     }
 }
 
 export function get_contract_owner(): string {
     return storage.getSome<string>(CONTRACT_OWNER)
+}
+
+export function set_fee(payload: i32): void {
+    assert(context.predecessor == get_contract_owner())
+    storage.set(FEE, payload)
+}
+
+export function get_fee(): i32 {
+    return storage.getSome<i32>(FEE)
 }
 
 export function add_minter(minter: string): void {
@@ -163,6 +175,9 @@ export function transfer_from(owner_id: string, new_owner_id: string, token_id: 
     const predecessor = context.predecessor
     // fetch token owner and escrow; assert access
     const owner = tokenToOwner.getSome(token_id)
+
+    const sale = tokenPrices.get(token_id)
+    assert(!sale, "A TOKEN ON SALE CANNOT BE TRANSFERED")
     assert(owner == owner_id, ERROR_OWNER_ID_DOES_NOT_MATCH_EXPECTATION)
     const escrow = escrowAccess.get(owner)
     assert(escrow, "ESCROW DOES NOT EXIST")
@@ -186,8 +201,10 @@ export function transfer(new_owner_id: string, token_id: TokenId): void {
     const predecessor = context.predecessor
     // fetch token owner and escrow; assert access
     const owner = tokenToOwner.getSome(token_id)
+    const sale = tokenPrices.get(token_id)
+    assert(new_owner_id !== predecessor, "YOU CANNOT TRANSFER ASSETS TO YOURSELF")
+    assert(!sale, "A TOKEN ON SALE CANNOT BE TRANSFERED")
     assert(owner == predecessor, ERROR_TOKEN_NOT_OWNED_BY_CALLER + ' token id:' + token_id.toString() + '' + owner)
-
     // transfer helper. just keep code shorter.
     move_token(predecessor, token_id, new_owner_id);
 }
@@ -619,7 +636,7 @@ export function buy(token_id: TokenId): void {
     const buyer = context.predecessor;
     const price: TokenPrice = tokenPrices.getSome(token_id);
     const owner = tokenToOwner.get(token_id, null)
-
+    const contract_owner = storage.getPrimitive(CONTRACT_OWNER, "seadox3.testset")
     if (!price || !owner) {
         ContractPromiseBatch.create(buyer as string).transfer(context.attachedDeposit)
         assert(false, "BUYER OR PRICE IS NOT FOUND. REFUNDING")
@@ -631,9 +648,82 @@ export function buy(token_id: TokenId): void {
         return
     }
     logging.log('PRICE: ' + price.toString() as string + 'Deposit: ' + context.attachedDeposit.toString())
-    ContractPromiseBatch.create(owner as string).transfer(context.attachedDeposit)
+    const fee: i32 = storage.getPrimitive<i32>(FEE, 40)
+    let cut: u128;
+    if (fee) {
+        cut = u128.div(context.attachedDeposit, u128.from(fee))
+    } else {
+        cut = u128.div(context.attachedDeposit, u128.from(40))
+    }
+    const seller = u128.sub(context.attachedDeposit, u128.from(cut))
+    logging.log('CUT IS' + cut.toString())
+    logging.log('SELLER GETS' + seller.toString())
+    ContractPromiseBatch.create(owner as string).transfer(seller)
+    ContractPromiseBatch.create(contract_owner as string).transfer(cut)
     move_token(owner as string, token_id, buyer)
     tokenPrices.delete(token_id)
+}
+
+export function bid(token_id: TokenId): void {
+    const token = tokens.getSome(token_id)
+    const owner = tokenToOwner.getSome(token_id)
+    const date = env.block_timestamp()
+    assert(token && owner !== context.predecessor, "TOKEN DOES NOT EXIST OR YOU ALREADY OWN THIS TOKEN.")
+    let Bids = bids.get(token_id)
+    const predecessor = context.predecessor
+    if (Bids && Bids.length > 0) {
+        logging.log('Bids Found: ' + predecessor)
+        for (let i = 0; i < Bids.length;) {
+            if (Bids[i].bidder == predecessor) {
+                ContractPromiseBatch.create(predecessor).transfer(Bids[i].amount)
+                logging.log('REFUNDING:' + Bids[i].amount.toString() + ' to ' + Bids[i].bidder)
+                Bids.splice(i, 1)
+            } else {
+                i++
+            }
+        }
+        const newBid = new Bid(context.attachedDeposit, predecessor, token_id, date, context.blockIndex)
+        Bids.push(newBid)
+    } else {
+        const newBid = new Bid(context.attachedDeposit, predecessor, token_id, date, context.blockIndex)
+        Bids = [newBid]
+    }
+    bids.set(token_id, Bids)
+}
+
+export function accept_bid(token_id: TokenId, bid_index: i32): void {
+    assert(context.predecessor == tokenToOwner.getSome(token_id), "TOKEN IS NOT OWNED")
+    let Bids = bids.getSome(token_id);
+    const fee: i32 = storage.getPrimitive<i32>(FEE, 40)
+    let cut: u128;
+    for (let i = 0; i < Bids.length; i++) {
+        if (i !== bid_index) {
+            ContractPromiseBatch.create(Bids[i].bidder).transfer(Bids[i].amount)
+        }
+    }
+    if (fee) {
+        cut = u128.div(Bids[bid_index].amount, u128.from(fee))
+    } else {
+        cut = u128.div(Bids[bid_index].amount, u128.from(40))
+    }
+    const sellers = u128.sub(Bids[bid_index].amount, u128.from(cut))
+    ContractPromiseBatch.create(context.predecessor).transfer(sellers)
+    tokenPrices.delete(token_id)
+    move_token(context.predecessor, token_id, Bids[bid_index].bidder)
+    bids.set(token_id, [])
+}
+
+export function remove_bid(token_id: TokenId, bid_index: i32): void {
+    let Bids = bids.getSome(token_id);
+    assert(context.predecessor == Bids[bid_index].bidder, "BID IS NOT OWNED")
+    ContractPromiseBatch.create(context.predecessor).transfer(Bids[bid_index].amount)
+    tokenPrices.delete(token_id)
+    Bids.splice(bid_index, 1)
+    bids.set(token_id, Bids)
+}
+
+export function get_bids(token_id: TokenId): Bid[] {
+    return bids.getSome(token_id)
 }
 
 

@@ -20,7 +20,7 @@
         </a>
       </div>
       <div class="absolute bg-cover bg-center w-full h-full top-0 left-0"
-           style="z-index : -1;" :style="{backgroundImage : `url(${account.pp})`}">
+           style="z-index : -1;" :style="{backgroundImage : `url(${base_src+account.pp})`}">
       </div>
       <div style="z-index : -1;"
            class="overlay bg-gray-800 opacity-75 top-0 left-0 pointer-events-none z-10 absolute w-full h-full"></div>
@@ -91,7 +91,7 @@
       </div>
     </div>
     <div class="container mx-auto max-w-full flex items-center justify-center pb-8">
-      <nav class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
+      <nav v-if="collections.length>0" class="relative z-0 inline-flex shadow-sm -space-x-px" aria-label="Pagination">
         <a href="#"
            v-if="currentPage>1 && pages.length>1"
            @click.prevent="currentPage--"
@@ -133,6 +133,9 @@
           <i class="fa fa-chevron-right text-md p-1"></i>
         </a>
       </nav>
+      <div v-else>
+        LOOKS LIKE THERE IS NOTHING HERE...
+      </div>
     </div>
   </div>
 </template>

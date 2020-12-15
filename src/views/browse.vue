@@ -145,7 +145,7 @@ export default {
       this.$router.push('/browse/recent/' + val).then(res => {
         this.$nextTick(() => {
           if (this.mode === 'artist') {
-            this.fetchByPage()
+            this.browseArtist()
           } else if (this.mode === 'genre') {
             this.fetchByGenre()
           } else {

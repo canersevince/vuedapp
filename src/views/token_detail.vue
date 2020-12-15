@@ -72,11 +72,10 @@
               v-if="owner === accountId && price"
               class="mt-4 font-major lowercase px-4 py-2 bg-black text-gray-100
               hover:text-white buy-button shadow-md hover:shadow-xl
-              transition duration-200 transform hover:scale-105 text-xs">
-            CANCEL SALE | <span class="text-md font-bold lowercase">current price: {{ price }} <span
+              transition duration-200 transform hover:scale-105 text-sm">
+            CANCEL SALE <br> <span class="text-xs font-bold lowercase">current price: {{ price }} <span
               class="uppercase">Ⓝ</span></span>
           </button>
-
           <button
               @click="sell"
               v-if="owner === accountId && !price"
@@ -85,6 +84,48 @@
               transition duration-200 transform hover:scale-105 text-xs">
             SELL
           </button>
+          <button
+              @click="transfer"
+              v-if="owner === accountId && !price"
+              class="mt-4 font-major lowercase px-4 py-2 bg-black text-gray-100
+              hover:text-white buy-button shadow-md hover:shadow-xl
+              transition duration-200 transform hover:scale-105 text-xs">
+            Transfer
+          </button>
+          <button
+              @click="bid"
+              v-if="owner !== accountId && accountId"
+              class="mt-4 font-major lowercase px-4 py-2 bg-green-500 text-gray-100
+              hover:text-white buy-button shadow-md hover:shadow-xl
+              transition duration-200 transform hover:scale-105 text-xs">
+            Offer
+          </button>
+          <div v-if="bids.length>0">
+            <h1 class="text-md font-major lowercase mt-5 font-extrabold">Offers</h1>
+            <ul class="mx-0 px-0">
+              <li :key="i" v-for="(bid, i) in bids" class="mt-1 text-sm border px-1 text-gray-900 rounded-xs py-1">
+                <a class="cursor-pointer">
+                  {{
+                    `${bid.bidder} offered ${formatter(bid.amount)}Ⓝ - ${getDate(bid)}`
+                  }}
+                  <span v-if="owner == accountId" @click="acceptBid(bid, i)" class="text-xs text-green-500">
+                    ACCEPT OFFER
+                    <i class="fa fa-check"></i>
+                  </span>
+                  <span v-if="accountId == bid.bidder" @click="removeBid(bid, i)" class="text-xs text-custom-red">
+                    REMOVE OFFER
+                    <i class="fa fa-times"></i>
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div v-else>
+            <h1 class="text-md font-major lowercase mt-5 font-extrabold">Offers</h1>
+            <p class="font-major lowercase text-xs mt-1 px-2 py-1 bg-gray-500 text-white">
+              There are no offers yet. Be the first one!
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -95,7 +136,7 @@
 <script>
 import axios from 'axios'
 import {constants} from "@/helpers/constants";
-import {utils} from 'near-api-js'
+import {utils, providers} from 'near-api-js'
 import Swal from 'sweetalert2'
 
 export default {
@@ -106,9 +147,120 @@ export default {
     collection: null,
     price: null,
     id: null,
-    base_url: constants.img_base_url
+    base_url: constants.img_base_url,
+    bids: []
   }),
   methods: {
+    redirectAlert() {
+      Swal.fire({
+        title: `Redirecting to wallet`,
+        text: "You need to sign this transaction.",
+        icon: "warning",
+      })
+    },
+    getDate(bid) {
+      console.log({bid})
+      const date = new Date(parseInt(bid.date) / 1000000)
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString()
+    },
+    formatter(val) {
+      return utils.format.formatNearAmount(val)
+    },
+    acceptBid(bid, idx) {
+      Swal.fire({
+        title: "Are you sure you want to accept this bid?",
+        html: `Bidder: ${bid.bidder}, Amount: ${utils.format.formatNearAmount(bid.amount)}NEAR`,
+        icon: "question",
+        confirmButtonText: "ACCEPT",
+        showCancelButton: true,
+        cancelButtonText: "CANCEL"
+      }).then(res => {
+        if (res.isConfirmed) {
+          this.$store.dispatch('loader', true)
+          window.contract.accept_bid({token_id: parseInt(this.id), bid_index: parseInt(idx)}).then(res => {
+            this.$store.dispatch('loader', false)
+            Swal.fire({
+              title: `Bid accepted! Tokens successfully transferred.`,
+              html: "It might take couple minutes before it shows up on token page.",
+              icon: "success",
+              confirmButtonText: "WOAH",
+            })
+            setTimeout(() => {
+              location.reload();
+            }, 250)
+          }).catch(err => {
+            console.log(err)
+            this.redirectAlert()
+          })
+        }
+      })
+    },
+    removeBid(bid, idx) {
+      Swal.fire({
+        title: "Are you sure you want to remove this bid?",
+        html: `Bid Amount: ${utils.format.formatNearAmount(bid.amount)}NEAR`,
+        icon: "question",
+        confirmButtonText: "REMOVE BID",
+        showCancelButton: true,
+        cancelButtonText: "CANCEL"
+      }).then(res => {
+        if (res.isConfirmed) {
+          window.contract.remove_bid({token_id: parseInt(this.id), bid_index: parseInt(idx)}).then(res => {
+            this.bids.splice(idx, 1)
+          }).catch(err => {
+            console.log(err)
+            this.redirectAlert()
+          })
+        }
+      })
+    },
+    bid() {
+      Swal.fire({
+        title: `Enter the Ⓝ amount to bid`,
+        html: "It might take couple minutes before it shows up on token page",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Bid!",
+        input: "text"
+      }).then(res => {
+            if (res.value) {
+
+              // check if bid lower than before or users bid exists
+
+              const formatted = utils.format.parseNearAmount(res.value.toString())
+
+              for (let i = 0; i < this.bids.length; i++) {
+                if (this.bids[i].bidder === this.accountId) {
+                  if (parseInt(res.value) < utils.format.formatNearAmount(this.bids[i].amount)) {
+                    Swal.fire({
+                      title: "You already have a higher bid than this."
+                    })
+                    return
+                  }
+                }
+              }
+              window.contract.bid({token_id: parseInt(this.id)}, constants.gas, formatted).then(res => {
+                console.log({res})
+              }).catch(err => {
+                this.redirectAlert()
+                console.log(err)
+              })
+            }
+          }
+      )
+    },
+    async isAvailable() {
+      const isAvailable = await window.contract.get_price({token_id: JSON.parse(this.id)});
+      if (!isAvailable) {
+        Swal.fire({
+          title: "Oops...",
+          html: `Looks like this token not available for sale anymore.`,
+          icon: "error"
+        })
+        return false
+      }
+      return true
+    },
     sell() {
       Swal.fire({
         title: "Please enter a price",
@@ -148,7 +300,7 @@ export default {
     },
     removeFromSale() {
       Swal.fire({
-        title: `Are you want to cancel this sale?`,
+        title: `Do you want to cancel this sale?`,
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "Yes",
@@ -170,12 +322,15 @@ export default {
         }
       })
     },
-    buy() {
+    async buy() {
       if (!this.id) return;
+      if (await this.isAvailable() === false) {
+        return
+      }
       const formatted = utils.format.parseNearAmount(this.price.toString())
       Swal.fire({
         title: `Are you want to buy this NFT for ${this.price}Ⓝ`,
-        description: "It might take couple minutes before it shows up in your wallet.",
+        html: "It might take couple minutes before it shows up in your wallet.",
         icon: "question",
         showCancelButton: true,
         confirmButtonText: "BUY!"
@@ -189,6 +344,51 @@ export default {
           text: "There was an error while interacting with contract. Please try again or re login..",
           icon: "warning",
         })
+      })
+    },
+    async transfer() {
+      if (await this.isAvailable() === true) {
+        Swal.fire({
+          title: "Oops...",
+          html: `Looks like this token is on sale at the moment.`,
+          icon: "error"
+        })
+        return
+      }
+      Swal.fire({
+        title: "Transfer Token",
+        html: "Enter the account name you want to transfer this token.",
+        icon: "question",
+        input: "text"
+      }).then(res => {
+        console.log(res.value)
+        if (res.value) {
+          Swal.fire({
+            title: "Confirm",
+            html: `Token will be transfered to: ${res.value}  -Do you confirm?`,
+            icon: "question",
+            cancelButtonText: "NO",
+            confirmButtonText: "YES",
+            showCancelButton: true
+          }).then(response => {
+            console.log({response})
+            if (response.isConfirmed) {
+              window.contract.transfer({new_owner_id: res.value, token_id: JSON.parse(this.id)}).then(response => {
+                console.log(response)
+                if (response) {
+                  Swal.fire({
+                    title: "Success!",
+                    html: `Token succesfully transfered to: ${res.value}! It might take couple minutes before it shows up`,
+                    icon: "success",
+                    confirmButtonText: "NICE!",
+                  })
+                }
+              }).catch(err => {
+                console.log(err)
+              })
+            }
+          })
+        }
       })
     }
   },
@@ -209,10 +409,21 @@ export default {
       this.$router.push('/404')
       this.$store.dispatch('loader', false)
     }
+    window.contract.get_bids({token_id: parseInt(this.id)})
+        .then(res => {
+          if (typeof res !== "string") {
+            this.bids = res
+          }
+        }).catch(err => {
+      console.log(err)
+    })
+
     const {data: owner} = await axios.get(`${constants.rpc_api}/tokens/get_token_owner/${id}`)
     if (typeof owner == 'string' && owner.indexOf('Error') < 0) {
       this.owner = owner
     }
+
+
     if (token.collection_id > 0 && token.collection_id.toString().length > 0) {
       const {data: collection} = await axios.get(`${constants.rpc_api}/collections/get_collection_by_id/${token.collection_id}`)
       if (typeof collection !== 'string') {

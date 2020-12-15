@@ -1,5 +1,5 @@
 import {PersistentUnorderedMap} from "near-sdk-as";
-import {CollectionId} from "./index";
+import {CollectionId, TokenPrice} from "./index";
 
 
 export type TokenId = u32;
@@ -37,12 +37,22 @@ export class Collection {
                 public owner: string,
                 public external_link: string,
                 public image_url: string,
-                public tokens: TokenId[]) {
+                public tokens: TokenId[],) {
     }
 }
 
+@nearBindgen
+export class Bid {
+    constructor(public amount: TokenPrice,
+                public bidder: string,
+                public token_id: TokenId,
+                public date: u64,
+                public block: u64) {
+    }
+}
 
 export const tokens = new PersistentUnorderedMap<TokenId, Token>('z')
 
 export const collections = new PersistentUnorderedMap<CollectionId, Collection>('o')
 
+export const bids = new PersistentUnorderedMap<TokenId, Bid[]>('b')
